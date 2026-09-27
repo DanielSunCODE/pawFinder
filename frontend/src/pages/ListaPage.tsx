@@ -1,5 +1,5 @@
 // Lista de perritos con foto en miniatura y filtros.
-// Los filtros viajan a la API como query params: el filtrado lo hace PostgreSQL, no el navegador.
+// Los filtros viajan a la API como query params: el filtrado lo hace MySQL, no el navegador.
 // También se guardan en la URL, así al volver del detalle siguen puestos.
 import { LoaderCircle, Search, SearchX, X } from 'lucide-react'
 import { Link, useSearchParams } from 'react-router'

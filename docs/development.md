@@ -8,8 +8,7 @@ reglas de la consigna (ver [`../MASTER_PROMPT.md`](../MASTER_PROMPT.md)).
 ```bash
 npm install
 copy backend\.env.example backend\.env     # ajustar DB y RUTA_IMAGENES
-npm run db:migrate
-npm run db:seed
+npm run db:reset                           # crea la base local, migra y siembra
 
 npm run dev            # backend (http://localhost:3000) + frontend (http://localhost:5173)
 ```

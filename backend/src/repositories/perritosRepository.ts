@@ -44,8 +44,6 @@ export interface NuevoPerritoGuardado {
   latitud: number;
   longitud: number;
   rutaImagen: string;
-  /** ISO 8601 con offset; null/ausente = dejar que la base ponga CURRENT_TIMESTAMP. */
-  fechaRegistro?: string | null;
 }
 
 export interface CatalogoItem {
@@ -224,11 +222,12 @@ export function createPerritosRepository(pool: Pool): PerritosRepository {
       try {
         await conn.beginTransaction();
 
-        const fechaRegistro = datos.fechaRegistro ? new Date(datos.fechaRegistro) : null;
+        // `fecha_registro` no se incluye: la pone el sistema con su valor por
+        // defecto (CURRENT_TIMESTAMP). El cliente no puede fijarla.
         const [resultado] = await conn.query<ResultSetHeader>(
           `INSERT INTO perros
-             (nombre, id_raza, sexo, id_patron, id_color_ojo, longitud_pelaje, tamano, etapa_vida, marcas_distintivas, latitud, longitud, ruta_imagen, fecha_registro)
-           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, COALESCE(?, CURRENT_TIMESTAMP))`,
+             (nombre, id_raza, sexo, id_patron, id_color_ojo, longitud_pelaje, tamano, etapa_vida, marcas_distintivas, latitud, longitud, ruta_imagen)
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
           [
             datos.nombre,
             datos.razaId,
@@ -242,7 +241,6 @@ export function createPerritosRepository(pool: Pool): PerritosRepository {
             datos.latitud,
             datos.longitud,
             datos.rutaImagen,
-            fechaRegistro,
           ],
         );
         const id = resultado.insertId;

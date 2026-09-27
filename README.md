@@ -13,9 +13,9 @@ están en [`MASTER_PROMPT.md`](./MASTER_PROMPT.md).
 
 | Integrante | Rol | Responsable de |
 |---|---|---|
-| Daniel Sun | **Backend** | API, validación del servidor, almacenamiento de imágenes, manejo de errores |
-| Remaori | **Frontend** | Pantallas, formulario, cámara/carga de foto, mapa, validaciones del cliente |
-| Aldo Badillo | **DBA** | Modelo de datos, migraciones, catálogos, datos de prueba, respaldo |
+| Daniel Alejandro Sun Flores | **Backend** | API, validación del servidor, almacenamiento de imágenes, manejo de errores |
+| Luis Sáenz Jiménez | **Frontend** | Pantallas, formulario, cámara/carga de foto, mapa, validaciones del cliente |
+| Aldo Asael Orozco Badillo | **DBA** | Modelo de datos, migraciones, catálogos, datos de prueba, respaldo |
 
 ## 2. Requisitos previos (versiones)
 
@@ -32,7 +32,7 @@ No se necesita Docker en ningún punto (ver sección 12).
 
 ```bash
 # 1. Clonar el repositorio
-git clone <URL-del-repositorio>
+git clone https://github.com/DanielSunCODE/pawFinder.git
 cd pawFinder
 
 # 2. Instalar todas las dependencias (workspaces: backend, frontend, database)
@@ -41,21 +41,34 @@ npm install
 # 3. Copiar el archivo de entorno del backend y ajustar valores
 copy backend\.env.example backend\.env     # Windows
 # cp backend/.env.example backend/.env     # Linux / macOS
+
+# 4. (Opcional) Entorno del frontend. Sin copiarlo se usan valores por defecto.
+copy frontend\.env.example frontend\.env.local   # Windows
+# cp frontend/.env.example frontend/.env.local   # Linux / macOS
 ```
 
 ## 4. Base de datos: creación, catálogos y datos de prueba
 
-Con `backend/.env` configurado (host, usuario, contraseña, `DB_NAME`):
+Con `backend/.env` configurado (host, usuario, contraseña, `DB_NAME`).
+
+> **La base no se crea sola.** `db:migrate` y `db:seed` se conectan directo a
+> `DB_NAME`; si la base todavía no existe, fallan con `Unknown database`. En una
+> máquina limpia usa `db:reset` (crea la base, migra y siembra), o crea la base a
+> mano antes de migrar.
 
 ```bash
-# Aplica las migraciones (crea tablas y catálogos base). Idempotente.
-npm run db:migrate
-
-# Carga razas, colores y 15+ perritos de prueba con foto.
-npm run db:seed
-
-# Alternativa: recrear la base local desde cero (DROP + CREATE + migrate + seed)
+# Opción recomendada en local: crea la base y la deja lista
+# (DROP + CREATE + migrate + seed). Se cancela si DB_HOST no es local,
+# para no tocar Aiven por error.
 npm run db:reset
+
+# --- Alternativa paso a paso ---
+# 1) Crea la base una sola vez (cliente de MySQL):
+#    CREATE DATABASE pawfinder CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci;
+# 2) Aplica las migraciones (crea tablas y catálogos base). Idempotente.
+npm run db:migrate
+# 3) Carga razas, colores y 15+ perritos de prueba con foto.
+npm run db:seed
 ```
 
 - Catálogos: **26 razas** (incluye "Sin raza definida / Criollo"), **12 colores**,
@@ -104,7 +117,6 @@ frontend usa `frontend/.env.local` (copiado de `frontend/.env.example`).
 |---|---|---|
 | `VITE_API_URL` | `/api` | URL base del API vista por el navegador (proxy de Vite en dev). |
 | `BACKEND_URL` | `http://localhost:3000` | Destino del proxy de Vite (solo lo lee `vite.config.ts`). |
-| `VITE_USAR_MOCKS` | `false` | `true` = datos de prueba en memoria, sin backend. |
 | `VITE_MAPA_CENTRO` | `19.4326,-99.1332` | Centro inicial del mapa. |
 | `VITE_MAPA_ZOOM` | `13` | Zoom inicial. |
 | `VITE_MAPA_MOSAICOS_URL` | *(vacío)* | Proveedor de mapas alternativo; vacío = OpenStreetMap (sin llave). |
@@ -193,8 +205,18 @@ devuelve el mismo perrito y no crea otro. La foto se valida por contenido y se
 
 ## 9. Capturas de pantalla
 
-> _Pendiente: agregar capturas desde celular del mapa, la lista, el detalle y el
-> formulario (con cámara, pin y errores de validación)._
+
+Capturas desde celular con datos reales; los archivos están en
+[`docs/capturas/`](./docs/capturas).
+
+| Mapa | Lista (filtro por color) | Detalle |
+|---|---|---|
+| ![Mapa con un pin por perrito](./docs/capturas/mapa.png) | ![Lista filtrada por color](./docs/capturas/lista-filtro-color.png) | ![Detalle de un perrito](./docs/capturas/detalle.png) |
+
+| Formulario | Validación (falta la foto) |
+|---|---|
+| ![Formulario de registro con foto](./docs/capturas/registro-formulario.png) | ![Error de validación: falta la foto](./docs/capturas/registro-error-sin-foto.png) |
+
 
 ## 10. Problemas comunes
 
@@ -202,6 +224,7 @@ devuelve el mismo perrito y no crea otro. La foto se valida por contenido y se
 |---|---|
 | `Configuracion de entorno invalida o incompleta: DB_USER` | Falta definir variables en `backend/.env`. |
 | `Access denied for user ...` | Usuario/contraseña de MySQL incorrectos en `backend/.env`. |
+| `Unknown database 'pawfinder'` | La base no existe todavía: usa `npm run db:reset` o créala con `CREATE DATABASE pawfinder`. |
 | `DB_SSL=true requiere DB_SSL_CA` | Define `DB_SSL_CA` (ruta o PEM entre comillas). |
 | Error de conexión TLS con Aiven | El PEM quedó truncado: envuélvelo en comillas dobles o usa una ruta. |
 | `RUTA_IMAGENES es obligatoria` | Define `RUTA_IMAGENES` con una carpeta fuera del proyecto. |
@@ -248,6 +271,12 @@ código está en [`docs/architecture.md`](./docs/architecture.md); el resumen:
 
 ## 12. Despliegue (punto extra)
 
+**Está en línea:**
+
+- App web: <https://paw-finder-frontend.vercel.app>
+- API: <https://pawfinder-hq2o.onrender.com> — documentación en
+  <https://pawfinder-hq2o.onrender.com/api/docs>
+
 Detalle completo en [`docs/deployment.md`](./docs/deployment.md). Resumen:
 
 - **Dónde corre cada pieza:** app web en **Vercel**, API en **Render**, MySQL en
@@ -268,16 +297,68 @@ Detalle completo en [`docs/deployment.md`](./docs/deployment.md). Resumen:
   las imágenes (ver `docs/deployment.md`).
 - **Sin Docker:** si se auto-hospeda, instalación directa con un servicio
   (`systemd`) y un proxy inverso (nginx/Caddy) al frente.
-- **URL pública:** _pendiente_ (se agrega aquí al publicar).
+- **URL pública:** app en <https://paw-finder-frontend.vercel.app> y API en
+  <https://pawfinder-hq2o.onrender.com>.
 
 ## 13. Estructura del repositorio
 
 ```
-frontend/   App web (React + Vite + TypeScript). Ver frontend/README.md
-backend/    API REST (Node + Express + TypeScript). Ver backend/README.md
-database/   Migraciones, seeds y scripts SQL
-docs/       Arquitectura, esquema de BD y despliegue
-openspec/   Especificaciones y cambios (spec-driven)
+pawFinder/
+├── README.md                      Documentación principal (instalación, uso, paradigmas)
+├── MASTER_PROMPT.md               Lineamientos completos de la consigna
+├── AGENTS.md                      Reglas de operación para colaboradores y agentes
+├── proyecto1-perritos.pdf         Consigna original
+├── package.json                   Workspaces (backend, frontend, database) y scripts raíz
+├── .nvmrc                         Versión de Node (22)
+├── .gitignore
+├── .github/
+│   └── workflows/
+│       └── ci.yml                 Pipeline: lint + tipos + pruebas + build (sin Docker)
+├── backend/                       API REST (Node + Express + TypeScript). Ver backend/README.md
+│   ├── src/
+│   │   ├── index.ts               Arranque (carga .env y valida la configuración)
+│   │   ├── app.ts                 Construye Express e inyecta dependencias
+│   │   ├── config/env.ts          Esquemas Zod de las variables de entorno
+│   │   ├── db/pool.ts             Pool de mysql2 (+ TLS para Aiven)
+│   │   ├── routes/                health.ts, perritos.ts, index.ts
+│   │   ├── repositories/          SQL declarativo (JOIN, agregación, idempotencia)
+│   │   ├── mappers/               Transformaciones fila → API (estilo funcional)
+│   │   ├── schemas/               Esquemas Zod del dominio
+│   │   ├── storage/               Driver local/S3, validación por contenido y compresión
+│   │   ├── middleware/            Manejo de errores y validación
+│   │   └── docs/                  Esquemas y documento OpenAPI generados desde Zod
+│   ├── tests/                     Unitarias e integrales (Vitest + Supertest)
+│   ├── .env.example
+│   └── package.json / tsconfig.json / vitest.config.ts
+├── frontend/                      App web (React + Vite + TypeScript). Ver frontend/README.md
+│   ├── src/
+│   │   ├── main.tsx               Punto de entrada
+│   │   ├── App.tsx                Rutas de la aplicación
+│   │   ├── config.ts              Lectura de variables VITE_
+│   │   ├── api/                   Cliente HTTP, tipos y errores
+│   │   ├── pages/                 Mapa, Lista, Detalle, Registrar y No encontrada
+│   │   ├── components/            Layout, tarjetas, mapa y campos del formulario
+│   │   ├── hooks/                 useAsync, useValorRetrasado
+│   │   ├── utils/                 Validación, idempotencia, reintentos, imagen, formato…
+│   │   └── styles/                Tailwind: tema, botones y medidas
+│   ├── public/
+│   ├── index.html
+│   ├── vite.config.ts             Proxy /api y modo HTTPS para celular (dev:red)
+│   ├── .env.example
+│   └── package.json / tsconfig*.json
+├── database/                      Modelo de datos y datos de prueba
+│   ├── migrations/                Esquema versionado (001..006)
+│   ├── seeds/                     Catálogos (razas, colores…) y perritos de prueba
+│   └── scripts/                   migrate, seed, reset-local, backup, restore
+├── docs/
+│   ├── architecture.md            Arquitectura, stack y mapeo de paradigmas
+│   ├── database-schema.md         Modelo y diagrama entidad-relación
+│   ├── deployment.md              Despliegue, HTTPS, respaldos y "sin Docker"
+│   ├── development.md             Guía de trabajo, ramas y pull requests
+│   └── capturas/                  Capturas de pantalla (mapa, lista, detalle, registro, error)
+└── openspec/                      Especificaciones y cambios (spec-driven)
+    ├── specs/                     Specs vigentes
+    └── changes/                   Cambios propuestos/implementados (incluye archive/)
 ```
 
 ## 14. Pruebas

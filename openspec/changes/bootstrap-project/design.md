@@ -99,7 +99,7 @@ El nombre del archivo lo genera el backend (UUID + extensión validada). La vali
 `CORS_ORIGIN` es una lista separada por comas. En producción solo el dominio del frontend en Vercel; en local el servidor de Vite. Los secretos viven en las variables de entorno de Vercel/Render (nunca en el repo); cada paquete aporta `.env.example`.
 
 Variables del backend: `NODE_ENV`, `PORT`, `CORS_ORIGIN`, `DB_HOST`, `DB_PORT`, `DB_USER`, `DB_PASSWORD`, `DB_NAME`, `DB_SSL`, `DB_SSL_CA`, `STORAGE_DRIVER`, `RUTA_IMAGENES`, `IMAGE_MAX_BYTES`, `AWS_REGION`, `AWS_S3_BUCKET`, `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`, `PUBLIC_BASE_URL`.
-Variables del frontend: `VITE_API_URL`, `VITE_USAR_MOCKS`, `BACKEND_URL` (proxy de Vite), `VITE_MAPA_CENTRO`, `VITE_MAPA_ZOOM` y `VITE_MAPA_MOSAICOS_URL` (opcional).
+Variables del frontend: `VITE_API_URL`, `BACKEND_URL` (proxy de Vite), `VITE_MAPA_CENTRO`, `VITE_MAPA_ZOOM` y `VITE_MAPA_MOSAICOS_URL` (opcional).
 
 ### Contexto seguro para cámara y ubicación
 En producción Vercel entrega HTTPS. En local, `localhost` es contexto seguro. Para probar desde un celular en la misma red se documentan dos vías: servidor Vite con HTTPS (certificado de desarrollo) o un túnel HTTPS (Cloudflare Tunnel/ngrok). El README debe explicarlo; el código no cambia.

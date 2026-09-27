@@ -161,15 +161,6 @@ export const subidaPerritoSchema = z
     patronPelajeId: z.coerce.number().int().positive().openapi({ example: 2 }),
     colorOjosId: z.coerce.number().int().positive().openapi({ example: 3 }),
     marcasDistintivas: z.string().max(500).optional().openapi({ example: 'Mancha blanca en el pecho' }),
-    fechaRegistro: z
-      .string()
-      .datetime({ offset: true })
-      .optional()
-      .openapi({
-        example: '2026-09-26T23:20:00-06:00',
-        description:
-          'Momento del registro en ISO 8601 con offset (la zona horaria del dispositivo). Si se omite, la base usa su hora actual.',
-      }),
     latitud: z.coerce.number().openapi({ example: 25.686614 }),
     longitud: z.coerce.number().openapi({ example: -100.313812 }),
     foto: z.string().openapi({ type: 'string', format: 'binary' }),

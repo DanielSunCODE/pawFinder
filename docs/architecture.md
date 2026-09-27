@@ -43,7 +43,7 @@ flowchart LR
 ```
 frontend/                      App web
   src/
-    api/                       Cliente HTTP, tipos, errores, mocks
+    api/                       Cliente HTTP, tipos y errores
     pages/                     Mapa, lista, detalle, registro
     components/                Layout y estados
     config.ts                  Lectura de variables VITE_
@@ -61,7 +61,7 @@ backend/
     middleware/                Errores uniformes y validación
     docs/                      Esquemas y documento OpenAPI generados
 database/
-  migrations/                  Esquema versionado (001..003)
+  migrations/                  Esquema versionado (001..006)
   seeds/                       Catálogos y perritos de prueba
   scripts/                     migrate, seed, reset-local, backup, restore
 docs/                          Esta guía, esquema de BD y despliegue

@@ -4,12 +4,17 @@ Cómo se publica PawFinder en internet (punto extra) y cómo se administra el
 servicio sin Docker. Aplica la regla clave: **las imágenes no viven junto al
 código** y **la base de datos no se expone**.
 
+**Está en línea:**
+
+- App web: <https://paw-finder-frontend.vercel.app>
+- API: <https://pawfinder-hq2o.onrender.com> (docs en `/api/docs`)
+
 ## 1. Dónde corre cada pieza
 
 | Pieza | Servicio | Notas |
 |---|---|---|
-| Aplicación web | **Vercel** | Build estático de Vite; entrega dominio y HTTPS. |
-| API REST | **Render** | Servicio Node; entrega dominio y HTTPS. |
+| Aplicación web | **Vercel** | `paw-finder-frontend.vercel.app`; build estático de Vite y HTTPS automático. |
+| API REST | **Render** | `pawfinder-hq2o.onrender.com`; servicio Node y HTTPS automático. |
 | Base de datos | **Aiven** (MySQL) | Acceso **solo** desde el API, con TLS. |
 | Imágenes | **AWS S3** (bucket privado) | Se leen por el endpoint del backend, nunca enlace público directo. |
 
@@ -39,7 +44,7 @@ código: no se sirven como carpeta estática ni se montan junto a los binarios.
 |---|---|---|
 | `NODE_ENV` | `development` | `production` |
 | `PORT` | `3000` | El que asigne Render (`process.env.PORT`) |
-| `CORS_ORIGIN` | `http://localhost:5173` | `https://pawfinder.vercel.app` (o dominio propio) |
+| `CORS_ORIGIN` | `http://localhost:5173` | `https://paw-finder-frontend.vercel.app` |
 | `DB_HOST` / `DB_PORT` | `localhost` / `3306` | host y puerto de Aiven |
 | `DB_USER` / `DB_PASSWORD` | usuario local / vacío | `avnadmin` / secreto de Aiven |
 | `DB_NAME` | `pawfinder` | `defaultdb` (o la base creada en Aiven) |
@@ -47,8 +52,8 @@ código: no se sirven como carpeta estática ni se montan junto a los binarios.
 | `STORAGE_DRIVER` | `local` | `s3` |
 | `RUTA_IMAGENES` | carpeta fuera del repo | no aplica (S3) |
 | `AWS_REGION` / `AWS_S3_BUCKET` / `AWS_ACCESS_KEY_ID` / `AWS_SECRET_ACCESS_KEY` | — | datos del bucket y credenciales IAM |
-| `PUBLIC_BASE_URL` / `OPENAPI_SERVER_URL` | `http://localhost:3000` | `https://api-pawfinder.onrender.com` |
-| `VITE_API_URL` (frontend) | `/api` (proxy de Vite) | URL del backend en Render |
+| `PUBLIC_BASE_URL` / `OPENAPI_SERVER_URL` | `http://localhost:3000` | `https://pawfinder-hq2o.onrender.com` |
+| `VITE_API_URL` (frontend) | `/api` (proxy de Vite) | `https://pawfinder-hq2o.onrender.com` |
 
 ### Dónde se guardan las contraseñas
 
@@ -442,7 +447,7 @@ instalación es directa:
 - [ ] `PUBLIC_BASE_URL` y `OPENAPI_SERVER_URL` con la URL pública.
 - [ ] `GET /api/health` responde 200 en la URL pública.
 - [ ] Registrar un perrito desde un **celular con datos móviles** (prueba real).
-- [ ] Poner aquí la **URL pública**: _pendiente_.
+- [x] Poner aquí la **URL pública**: app <https://paw-finder-frontend.vercel.app>, API <https://pawfinder-hq2o.onrender.com>.
 
 > Recuerda: un túnel (Cloudflare Tunnel, ngrok, Tailscale Funnel) sirve como
 > alternativa para la demo, pero la liga cambia o se cae al cerrar la sesión.

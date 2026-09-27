@@ -31,7 +31,7 @@ El API SHALL devolver un perrito por su identificador, incluyendo raza, color de
 - **THEN** responde 400 con un mensaje entendible
 
 ### Requirement: Registrar un perrito con validación en el servidor
-El registro SHALL recibir multipart con los datos y la foto, y SHALL validar en el servidor que el nombre no esté vacío; que estén presentes la raza, el color de ojos y los descriptivos obligatorios (sexo, etapa de vida, tamaño, longitud de pelaje y patrón de pelaje), validándolos contra sus listas fijas; que haya exactamente un color principal; que los colores adicionales sean de 0 a 2 sin repetir ni incluir el principal; y que latitud y longitud estén en rango. El único campo aceptado como opcional son las marcas distintivas. La raza se elige del catálogo, con "Sin raza definida / Criollo" para el caso de no conocerla. La fecha de registro la determina el sistema: el cliente envía el instante en ISO 8601 con su offset y el servidor lo guarda en UTC; si no viene, se usa la hora de la base.
+El registro SHALL recibir multipart con los datos y la foto, y SHALL validar en el servidor que el nombre no esté vacío; que estén presentes la raza, el color de ojos y los descriptivos obligatorios (sexo, etapa de vida, tamaño, longitud de pelaje y patrón de pelaje), validándolos contra sus listas fijas; que haya exactamente un color principal; que los colores adicionales sean de 0 a 2 sin repetir ni incluir el principal; y que latitud y longitud estén en rango. El único campo aceptado como opcional son las marcas distintivas. La raza se elige del catálogo, con "Sin raza definida / Criollo" para el caso de no conocerla. La fecha de registro la determina el sistema (la base usa su hora actual); el cliente no puede fijarla y, si la envía, se ignora.
 
 #### Scenario: Registro válido
 - **WHEN** se envía un registro con nombre, raza, color de ojos, los descriptivos obligatorios, un color principal, 0 a 2 colores adicionales válidos, latitud/longitud y una foto JPG, PNG o WEBP
@@ -49,13 +49,13 @@ El registro SHALL recibir multipart con los datos y la foto, y SHALL validar en 
 - **WHEN** se omiten las marcas distintivas
 - **THEN** responde 201 y el perrito las devuelve en `null`
 
-#### Scenario: Fecha de registro con zona horaria del usuario
-- **WHEN** el cliente envía `fechaRegistro` en ISO 8601 con su offset (por ejemplo `2026-09-26T23:20:00-06:00`)
-- **THEN** se guarda el instante correcto en UTC y el detalle lo devuelve en ISO 8601
+#### Scenario: Fecha de registro la pone el sistema
+- **WHEN** se registra un perrito
+- **THEN** la base guarda la fecha con su hora actual y el detalle la devuelve en ISO 8601
 
-#### Scenario: Fecha de registro ausente o inválida
-- **WHEN** no se envía `fechaRegistro`
-- **THEN** la base usa su hora actual; si se envía con formato inválido, responde 400
+#### Scenario: Fecha de registro enviada por el cliente
+- **WHEN** el cliente manda un campo `fechaRegistro`
+- **THEN** se ignora y la fecha sigue siendo la del sistema
 
 #### Scenario: Nombre vacío
 - **WHEN** el nombre está vacío o son solo espacios

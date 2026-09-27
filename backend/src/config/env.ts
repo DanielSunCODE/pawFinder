@@ -31,6 +31,7 @@ const envSchema = z
     AWS_SECRET_ACCESS_KEY: z.string().optional(),
 
     PUBLIC_BASE_URL: z.string().optional(),
+    OPENAPI_SERVER_URL: z.string().optional(),
   })
   .superRefine((value, ctx) => {
     if (value.STORAGE_DRIVER === 'local' && !value.RUTA_IMAGENES) {

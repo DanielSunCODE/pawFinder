@@ -77,12 +77,14 @@ Entidad principal. Reglas de negocio aplicadas por `CHECK`:
 | `chk_etapa` | `'cachorro'`, `'adulto'` o `'senior'` |
 | `chk_latitud` / `chk_longitud` | Rango geográfico válido (-90/90, -180/180) |
 
-Solo `nombre`, `id_raza`, `latitud`, `longitud` y `ruta_imagen` son
-obligatorios. `sexo`, `id_patron`, `id_color_ojo`, `longitud_pelaje`, `tamano`
-y `etapa_vida` son información adicional **opcional** (nullable): no pertenecen
-a los campos obligatorios de la consigna y el registro mínimo funciona sin
-ellos. La raza "Sin raza definida / Criollo" cubre el caso de raza no
-identificada.
+Obligatorios: `nombre`, `id_raza`, `sexo`, `id_patron`, `id_color_ojo`,
+`longitud_pelaje`, `tamano`, `etapa_vida`, `latitud`, `longitud` y `ruta_imagen`.
+El único campo **opcional** (nullable) es `marcas_distintivas`.
+
+`id_raza` se elige del catálogo; para "no se sabe" existe la opción
+"Sin raza definida / Criollo". Migraciones: `005_campos_requeridos.sql` marca
+`NOT NULL` los descriptivos y `006_raza_y_color_ojos_requeridos.sql` la raza y el
+color de ojos (los registros viejos incompletos se rellenan con valores neutros).
 
 `ruta_imagen` es `UNIQUE` y es la clave que usa el storage del backend
 (`backend/src/storage`, no una URL pública) para localizar el archivo en el

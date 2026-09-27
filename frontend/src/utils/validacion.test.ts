@@ -26,18 +26,26 @@ describe('validarRegistro', () => {
     expect(validarRegistro(datosValidos, { idPatronSolido: ID_SOLIDO })).toEqual({})
   })
 
-  it('los datos de apariencia son opcionales ("No sé")', () => {
-    const sinSaber: DatosFormulario = {
+  it('exige sexo, edad, tamaño, largo del pelo y patrón', () => {
+    const sinApariencia: DatosFormulario = {
       ...datosValidos,
       sexo: null,
       etapaVida: null,
       tamano: null,
       longitudPelaje: null,
       patronPelajeId: null,
-      colorOjosId: null,
-      marcasDistintivas: '',
     }
-    expect(validarRegistro(sinSaber)).toEqual({})
+    expect(Object.keys(validarRegistro(sinApariencia)).sort()).toEqual([
+      'etapaVida',
+      'longitudPelaje',
+      'patronPelajeId',
+      'sexo',
+      'tamano',
+    ])
+  })
+
+  it('exige el color de ojos', () => {
+    expect(validarRegistro({ ...datosValidos, colorOjosId: null }).colorOjosId).toBeDefined()
   })
 
   it('pide la raza', () => {

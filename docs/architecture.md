@@ -49,12 +49,15 @@ frontend/                      App web
     config.ts                  Lectura de variables VITE_
 backend/
   src/
-    app.ts                     Construye Express (inyecta pool y storage)
+    app.ts                     Construye Express (inyecta pool, storage y repositorio)
     index.ts                   Arranque (carga .env y valida config)
     config/env.ts              Esquemas Zod (loadEnv / loadDbEnv)
     db/pool.ts                 Pool mysql2 + TLS Aiven
     storage/                   StorageDriver: local, s3, validación de imagen
-    routes/                    health, photos
+    schemas/perrito.ts         Esquemas Zod del dominio
+    repositories/              SQL declarativo (JOIN, agregación, idempotencia)
+    mappers/                   Transformaciones funcionales (row → API)
+    routes/                    health, perritos
     middleware/                Errores uniformes y validación
     docs/                      Esquemas y documento OpenAPI generados
 database/
@@ -68,8 +71,9 @@ openspec/                      Specs y cambios
 ## Flujo de una petición
 
 1. El navegador pide `GET /api/perritos/{id}/foto`.
-2. Express entra por `backend/src/routes/photos.ts`.
-3. Se valida el parámetro, se consulta `perros.ruta_imagen` con SQL.
+2. Express entra por `backend/src/routes/perritos.ts`.
+3. Se valida el parámetro y el repositorio (`backend/src/repositories/perritosRepository.ts`)
+   consulta la ruta de la imagen con SQL.
 4. El `StorageDriver` activo lee el binario (disco local o S3).
 5. Se responde la imagen con su `Content-Type`; los errores pasan por el
    manejador central (`backend/src/middleware/errorHandler.ts`) con el contrato
@@ -79,19 +83,20 @@ openspec/                      Specs y cambios
 
 | Paradigma | Dónde vive | Ejemplo |
 |---|---|---|
-| **Declarativo** | `database/migrations/`, `database/seeds/`, consultas del API, JSX/CSS | `SELECT ruta_imagen FROM perros WHERE id_perro = ?` en `backend/src/routes/photos.ts` |
+| **Declarativo** | `database/migrations/`, `database/seeds/`, SQL del API, JSX/CSS | JOIN de perrito + raza + colores y `GROUP BY` en `backend/src/repositories/perritosRepository.ts` |
 | **Imperativo** | Arranque y orquestación | `backend/src/app.ts`, `backend/src/index.ts`; manejadores de eventos del frontend |
 | **Orientado a objetos** | Abstracción y servicios | `StorageDriver` y drivers en `backend/src/storage/`; `class HttpError` en `backend/src/middleware/errorHandler.ts`; `class ErrorApi` en `frontend/src/api/errores.ts`; componentes React |
-| **Funcional** | Transformaciones sin mutación ni ciclos | `aQueryString` en `frontend/src/api/http.ts` (`Object.entries(...).filter(...).map(...)`) |
+| **Funcional** | Transformaciones sin mutación ni ciclos | `aPerritoApi` en `backend/src/mappers/perritoMapper.ts` (`find`/`filter`/`map`) y `agrupar` con `reduce` en `backend/src/repositories/perritosRepository.ts`; `aQueryString` en `frontend/src/api/http.ts` |
 
 ### SQL declarativo (JOIN y agregación)
 
-- **JOIN:** la foto y el futuro detalle/listado unen `perros` con `perro_colores`
-  y `colores` en una sola consulta.
-- **Agregación:** conteos por color o por zona con `GROUP BY` (se incorporan en el
-  cambio de dominio).
-- El filtrado y ordenamiento se resuelven en SQL; el backend no trae todo para
-  filtrarlo en JavaScript.
+- **JOIN:** `SELECT_PERRITO` en `backend/src/repositories/perritosRepository.ts`
+  une `perros` con `razas` y con `perro_colores`/`colores` en una sola consulta,
+  tanto para el listado como para el detalle.
+- **Agregación:** `GET /api/estadisticas` usa `GROUP BY` para contar perritos por
+  color (`estadisticasPorColor`).
+- El filtrado (`busqueda`, `colorId`, `razaId`) y el orden se resuelven en SQL;
+  el backend no trae todo para filtrarlo en JavaScript.
 
 ### Idempotencia
 

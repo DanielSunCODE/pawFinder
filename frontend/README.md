@@ -201,7 +201,8 @@ nombre de un campo o de una ruta, sólo se toca `src/api/`.
 | Foto: tomar con la cámara **o** subir; JPG, PNG o WEBP | `components/formulario/SelectorFoto.tsx`, `utils/imagen.ts` |
 | Nombre obligatorio (sólo espacios no cuenta) | `utils/validacion.ts` |
 | Raza de catálogo, obligatoria ("Sin raza definida / Criollo" por defecto) | `pages/RegistrarPage.tsx` |
-| Sexo, edad, tamaño, largo y patrón del pelo, color de ojos: se eligen de listas, con opción "No sé" | `components/formulario/SelectorOpciones.tsx`, `utils/opciones.ts` |
+| Sexo, edad, tamaño, largo y patrón del pelo: obligatorios, se eligen de listas | `components/formulario/SelectorOpciones.tsx`, `utils/validacion.ts`, `utils/opciones.ts` |
+| Color de ojos: obligatorio, se elige de la lista | `components/formulario/SelectorOpciones.tsx`, `utils/validacion.ts`, `utils/opciones.ts` |
 | Pelaje "Sólido" = sólo color principal | `pages/RegistrarPage.tsx`, `utils/validacion.ts` |
 | Marcas distintivas: texto opcional, máximo 500 | `pages/RegistrarPage.tsx`, `utils/validacion.ts` |
 | Un color principal + 0 a 2 adicionales, sin repetir | `components/formulario/SelectorColores.tsx`, `utils/validacion.ts` |

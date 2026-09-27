@@ -1,10 +1,13 @@
 // Pantalla principal: todos los perritos en el mapa, un pin por perrito.
 // Al tocar un pin se ve su foto, nombre y colores.
+// Con ?perrito=<id> en la dirección (botón "Ver en el mapa" del detalle), el mapa va directo a ese
+// perrito y abre su globo. Va en la dirección para que funcione al recargar o compartir el enlace.
 import { LoaderCircle, LocateFixed, PawPrint, X } from 'lucide-react'
-import { useEffect, useMemo, useRef, useState } from 'react'
+import type { Marker as MarcadorLeaflet } from 'leaflet'
+import { useEffect, useMemo, useRef, useState, type RefObject } from 'react'
 import { CircleMarker, Marker, Popup, useMap } from 'react-leaflet'
-import { Link } from 'react-router'
-import { api, type Perrito } from '../api'
+import { Link, useSearchParams } from 'react-router'
+import { api, type Id, type Perrito } from '../api'
 import { EtiquetasColores } from '../components/Colores'
 import { MensajeError } from '../components/Estado'
 import { MapaBase } from '../components/mapa/MapaBase'
@@ -13,17 +16,41 @@ import { useAsync } from '../hooks/useAsync'
 import { coloresDe, coordenadasDe } from '../utils/transformaciones'
 import { obtenerUbicacionActual, type UbicacionActual } from '../utils/ubicacion'
 
-/** Encuadra el mapa para que se vean todos los perritos (sólo la primera vez). */
-function EncuadrarPerritos({ perritos }: { perritos: Perrito[] }) {
+/**
+ * Acomoda el mapa la primera vez que llegan los perritos:
+ * - si hay uno enfocado (?perrito=<id>), va a él y abre su globo;
+ * - si no, encuadra a todos.
+ */
+function EncuadrarPerritos({
+  perritos,
+  enfocado,
+  marcadores,
+}: {
+  perritos: Perrito[]
+  enfocado: Perrito | null
+  marcadores: RefObject<Map<Id, MarcadorLeaflet>>
+}) {
   const mapa = useMap()
   const yaEncuadrado = useRef(false)
   useEffect(() => {
     if (yaEncuadrado.current || perritos.length === 0) return
     yaEncuadrado.current = true
-    if (perritos.length === 1) mapa.setView([perritos[0].latitud, perritos[0].longitud], 16)
+    if (enfocado) mapa.setView([enfocado.latitud, enfocado.longitud], 17)
+    else if (perritos.length === 1) mapa.setView([perritos[0].latitud, perritos[0].longitud], 16)
     else mapa.fitBounds(coordenadasDe(perritos), { padding: [40, 40], maxZoom: 16 })
-  }, [mapa, perritos])
+  }, [mapa, perritos, enfocado])
+
+  // El globo se abre aparte (y sin la guarda de arriba) para que siempre quede abierto al llegar.
+  useEffect(() => {
+    if (enfocado) marcadores.current.get(enfocado.id)?.openPopup()
+  }, [enfocado, marcadores])
   return null
+}
+
+/** "12" → 12; vacío o texto raro → null. */
+const aId = (valor: string | null): Id | null => {
+  const numero = Number(valor)
+  return valor && Number.isInteger(numero) && numero > 0 ? numero : null
 }
 
 /** Mueve el mapa a la ubicación del usuario cuando la obtiene. */
@@ -52,6 +79,14 @@ function GloboPerrito({ perrito }: { perrito: Perrito }) {
 
 export function MapaPage() {
   const { datos: perritos, cargando, error, reintentar } = useAsync(() => api.listarPerritos(), [])
+  const [parametros, setParametros] = useSearchParams()
+  const idEnfocado = aId(parametros.get('perrito'))
+  const enfocado = perritos?.find((perrito) => perrito.id === idEnfocado) ?? null
+  const noEncontrado = idEnfocado !== null && perritos != null && !enfocado
+  const refsMarcadores = useRef(new Map<Id, MarcadorLeaflet>())
+
+  /** Quita ?perrito=… de la dirección (sin agregar una entrada al historial). Se usa al cerrar el aviso. */
+  const soltarEnfoque = () => setParametros({}, { replace: true })
   const [miUbicacion, setMiUbicacion] = useState<UbicacionActual | null>(null)
   const [buscandoUbicacion, setBuscandoUbicacion] = useState(false)
   const [errorUbicacion, setErrorUbicacion] = useState<string | null>(null)
@@ -79,14 +114,25 @@ export function MapaPage() {
   return (
     <div className="relative h-full">
       <MapaBase className="size-full">
-        {perritos && <EncuadrarPerritos perritos={perritos} />}
         <VolarA destino={miUbicacion} />
 
         {marcadores.map(({ perrito, icono }) => (
-          <Marker key={perrito.id} position={[perrito.latitud, perrito.longitud]} icon={icono} alt={perrito.nombre}>
+          <Marker
+            key={perrito.id}
+            position={[perrito.latitud, perrito.longitud]}
+            icon={icono}
+            alt={perrito.nombre}
+            ref={(marcador) => {
+              if (marcador) refsMarcadores.current.set(perrito.id, marcador)
+              else refsMarcadores.current.delete(perrito.id)
+            }}
+          >
             <GloboPerrito perrito={perrito} />
           </Marker>
         ))}
+
+        {/* Va después de los pines: así, cuando corre, los globos ya están listos para abrirse. */}
+        {perritos && <EncuadrarPerritos perritos={perritos} enfocado={enfocado} marcadores={refsMarcadores} />}
 
         {miUbicacion && (
           <CircleMarker
@@ -131,6 +177,20 @@ export function MapaPage() {
           <Link to="/registrar" className="boton boton--primario">
             Registrar el primero
           </Link>
+        </div>
+      )}
+
+      {noEncontrado && (
+        <div className="absolute z-1000 bg-superficie shadow-tarjeta top-16 left-1/2 flex w-[calc(100%-2rem)] max-w-105 -translate-x-1/2 items-start gap-2 rounded-campo py-3 pr-2 pl-4 text-sm font-semibold" role="alert">
+          <p>No encontramos ese perrito en el mapa.</p>
+          <button
+            type="button"
+            className="grid size-8 shrink-0 place-items-center rounded-full bg-superficie-2"
+            onClick={soltarEnfoque}
+            aria-label="Cerrar aviso"
+          >
+            <X size={18} />
+          </button>
         </div>
       )}
 

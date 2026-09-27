@@ -15,6 +15,8 @@ interface Props {
   alAlternarAdicional: (id: Id) => void
   errorPrincipal?: string
   errorAdicionales?: string
+  /** true si el patrón es "Sólido": sólo se permite el color principal. */
+  soloPrincipal?: boolean
 }
 
 export function SelectorColores({
@@ -25,6 +27,7 @@ export function SelectorColores({
   alAlternarAdicional,
   errorPrincipal,
   errorAdicionales,
+  soloPrincipal = false,
 }: Props) {
   const lleno = adicionalesIds.length >= MAX_COLORES_ADICIONALES
 
@@ -62,11 +65,14 @@ export function SelectorColores({
             opcional · {adicionalesIds.length} de {MAX_COLORES_ADICIONALES}
           </span>
         </legend>
+        {soloPrincipal && (
+          <p className={estilos.ayudaOpcion}>Con pelaje sólido sólo va el color principal.</p>
+        )}
         <div className={estilos.chips}>
           {colores.map((color) => {
             const elegido = adicionalesIds.includes(color.id)
             const esPrincipal = color.id === principalId
-            const deshabilitado = esPrincipal || (lleno && !elegido)
+            const deshabilitado = soloPrincipal || esPrincipal || (lleno && !elegido)
             return (
               <label
                 key={color.id}

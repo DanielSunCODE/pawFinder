@@ -1,37 +1,58 @@
 // ─────────────────────────────────────────────────────────────────────────────
-// CONTRATO DE LA API, visto desde el frontend.
-// Debe coincidir con lo que acuerde el equipo (contrato-api.md / openspec).
-// Si el backend cambia un nombre o un tipo, se cambia aquí y en ese documento.
+// Datos que el frontend recibe y envía, con los campos de la base de datos
+// (database/migrations/001_catalogs.sql y 002_dogs.sql).
+// Si el backend cambia un nombre o un tipo, se ajusta aquí y en http.ts.
 // ─────────────────────────────────────────────────────────────────────────────
 
-/** Identificador numérico que genera PostgreSQL. Si el backend usa UUID, cambiar a `string`. */
+/** Identificador numérico que genera MySQL (AUTO_INCREMENT). */
 export type Id = number
 
-export interface Raza {
+/** Un elemento de catálogo: razas, patrones de pelaje… */
+export interface ElementoCatalogo {
   id: Id
   nombre: string
 }
 
-export interface Color {
-  id: Id
-  nombre: string
-  /** Color para pintar la muestra, formato "#RRGGBB". Puede venir null. */
-  hex: string | null
+export type Raza = ElementoCatalogo
+export type PatronPelaje = ElementoCatalogo
+
+/** Colores de pelo y de ojos. `hex` sirve para pintar la muestra; si no viene, el frontend usa uno propio. */
+export interface Color extends ElementoCatalogo {
+  hex?: string | null
 }
+
+// Valores fijos que acepta la base (CHECK en 002_dogs.sql). Se envían tal cual, con ñ incluida.
+export const SEXOS = ['macho', 'hembra'] as const
+export const TAMANOS = ['pequeño', 'mediano', 'grande', 'gigante'] as const
+export const LONGITUDES_PELAJE = ['corto', 'mediano', 'largo'] as const
+export const ETAPAS_VIDA = ['cachorro', 'adulto', 'senior'] as const
+
+export type Sexo = (typeof SEXOS)[number]
+export type Tamano = (typeof TAMANOS)[number]
+export type LongitudPelaje = (typeof LONGITUDES_PELAJE)[number]
+export type EtapaVida = (typeof ETAPAS_VIDA)[number]
 
 /** Un perrito tal como lo devuelve la API (lista y detalle usan la misma forma). */
 export interface Perrito {
   id: Id
   nombre: string
-  /** URL de la foto completa, servida por un endpoint del backend. */
+  /** URL de la foto. Si el backend no la manda, se usa GET /api/perritos/{id}/foto. */
   fotoUrl: string
-  /** URL de la miniatura. Si el backend no genera miniaturas, manda la misma que fotoUrl. */
+  /** URL de la miniatura. Si no viene, se usa la misma foto. */
   miniaturaUrl: string
-  /** null = no se especificó raza. "Sin raza definida / criollo" es una raza más del catálogo. */
+  /** Obligatoria en la base; "Sin raza definida / Criollo" es una raza más del catálogo. */
   raza: Raza | null
   colorPrincipal: Color
   /** De 0 a 2 colores, sin repetir ni incluir el principal. */
   coloresAdicionales: Color[]
+  // Los siguientes son opcionales en la base: null = no se sabe.
+  sexo: Sexo | null
+  etapaVida: EtapaVida | null
+  tamano: Tamano | null
+  longitudPelaje: LongitudPelaje | null
+  patronPelaje: PatronPelaje | null
+  colorOjos: Color | null
+  marcasDistintivas: string | null
   latitud: number
   longitud: number
   /** Fecha y hora ISO 8601 que pone el servidor, por ejemplo "2026-09-22T18:40:00-06:00". */
@@ -48,29 +69,35 @@ export interface FiltrosPerritos {
 /** Datos que se envían al registrar (la foto va aparte, en el mismo multipart). */
 export interface NuevoPerrito {
   nombre: string
-  razaId: Id | null
+  razaId: Id
   colorPrincipalId: Id
   coloresAdicionalesIds: Id[]
+  sexo: Sexo | null
+  etapaVida: EtapaVida | null
+  tamano: Tamano | null
+  longitudPelaje: LongitudPelaje | null
+  patronPelajeId: Id | null
+  colorOjosId: Id | null
+  marcasDistintivas: string | null
   latitud: number
   longitud: number
 }
 
-/** Forma de cualquier respuesta de error del backend. */
-/**
- * Cuerpo de una respuesta con error. Se aceptan los dos formatos que hay en el equipo:
- * - el del backend actual (openspec):  { error: { message, details: [{ field, message }] } }
- * - el de docs/contrato-api.md:        { error: { mensaje, campos: { campo: mensaje } } }
- * Cuando el equipo fije uno solo, se puede quitar el otro.
- */
+/** Todos los catálogos que usa el formulario, cargados de una vez. */
+export interface Catalogos {
+  razas: Raza[]
+  colores: Color[]
+  coloresOjos: Color[]
+  patronesPelaje: PatronPelaje[]
+}
+
+/** Cuerpo de una respuesta con error del backend: { error: { message, details: [{ field, message }] } }. */
 export interface RespuestaError {
   error: {
     /** Mensaje para humanos, en español. Nunca "Error 400". */
     message?: string
-    mensaje?: string
-    /** Errores por campo (formato del backend actual). */
+    /** Errores por campo. */
     details?: { field?: string; message?: string }[]
-    /** Errores por campo, con las mismas llaves que NuevoPerrito, más "foto". */
-    campos?: Record<string, string>
   }
 }
 
@@ -81,4 +108,8 @@ export interface ApiPerritos {
   crearPerrito(datos: NuevoPerrito, foto: File, claveIdempotencia: string): Promise<Perrito>
   listarRazas(): Promise<Raza[]>
   listarColores(): Promise<Color[]>
+  listarColoresOjos(): Promise<Color[]>
+  listarPatronesPelaje(): Promise<PatronPelaje[]>
+  /** Los cuatro catálogos en paralelo. */
+  cargarCatalogos(): Promise<Catalogos>
 }

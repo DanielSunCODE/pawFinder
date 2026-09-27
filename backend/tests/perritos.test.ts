@@ -325,6 +325,55 @@ describe('POST /api/perritos', () => {
     );
   });
 
+  it('reenvía la fecha de registro enviada por el cliente', async () => {
+    const crear = vi.fn(async () => ({ perrito: { ...perrito, id: 7 }, replay: false }));
+    const app = appCon(repo({ crear }));
+
+    const response = await request(app)
+      .post('/api/perritos')
+      .set('Idempotency-Key', 'clave-fecha-123')
+      .field('nombre', 'Luna')
+      .field('razaId', '2')
+      .field('colorPrincipalId', '1')
+      .field('sexo', 'hembra')
+      .field('etapaVida', 'adulto')
+      .field('tamano', 'mediano')
+      .field('longitudPelaje', 'corto')
+      .field('patronPelajeId', '2')
+      .field('colorOjosId', '3')
+      .field('latitud', '25.1')
+      .field('longitud', '-100.2')
+      .field('fechaRegistro', '2026-09-26T23:20:00-06:00')
+      .attach('foto', PNG, 'foto.png');
+
+    expect(response.status).toBe(201);
+    expect(crear).toHaveBeenCalledWith(
+      expect.objectContaining({ fechaRegistro: '2026-09-26T23:20:00-06:00' }),
+      'clave-fecha-123',
+    );
+  });
+
+  it('400 si la fecha de registro no es una fecha ISO válida', async () => {
+    const response = await request(appCon())
+      .post('/api/perritos')
+      .set('Idempotency-Key', 'clave-fecha-mala-1')
+      .field('nombre', 'Luna')
+      .field('razaId', '2')
+      .field('colorPrincipalId', '1')
+      .field('sexo', 'hembra')
+      .field('etapaVida', 'adulto')
+      .field('tamano', 'mediano')
+      .field('longitudPelaje', 'corto')
+      .field('patronPelajeId', '2')
+      .field('colorOjosId', '3')
+      .field('latitud', '25.1')
+      .field('longitud', '-100.2')
+      .field('fechaRegistro', 'ayer por la tarde')
+      .attach('foto', PNG, 'foto.png');
+
+    expect(response.status).toBe(400);
+  });
+
   it('400 si un campo descriptivo trae un valor fuera de la lista', async () => {
     const response = await request(appCon())
       .post('/api/perritos')

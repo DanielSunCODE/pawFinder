@@ -8,6 +8,7 @@ El backend ya tiene la base (config, salud, storage, base de datos, documentaci�
 - El registro es **idempotente**: la clave del encabezado `Idempotency-Key` se guarda en la tabla `idempotencia`; reintentar devuelve el mismo perrito y no crea otro.
 - La validación vive en **Zod** y es la misma que genera la documentación **OpenAPI** (Swagger UI). El body del registro se documenta con campos estructurados (`nombre`, `razaId`, `colorPrincipalId`, `coloresAdicionalesIds[]`, `latitud`, `longitud`, `foto` binaria).
 - El registro cubre **todos los campos del esquema** `perros`: exige `razaId`, `colorOjosId`, `sexo`, `etapaVida`, `tamano`, `longitudPelaje` y `patronPelajeId`; el único campo opcional son las `marcasDistintivas`. El detalle/listado los devuelve (con JOIN a `patrones_pelaje` y `colores_ojos`). La base se alinea con `005`/`006`.
+- La **fecha de registro** la determina el sistema con la zona horaria del usuario: el cliente envía el instante en ISO 8601 con offset, el backend lo guarda en UTC y lo devuelve en ISO 8601. Se corrige el desfase leyendo MySQL con `timezone: 'Z'`.
 - El listado y el detalle resuelven el JOIN de perrito + raza + colores en SQL; las estadísticas usan `GROUP BY`; el filtrado y el orden se hacen en SQL, no en el cliente.
 - La raza pasa a ser **opcional** (migración que permite `id_raza` nulo).
 - Se agrega un mapper funcional (`find`/`filter`/`map` + `reduce`, sin mutar) para dar forma a las respuestas.

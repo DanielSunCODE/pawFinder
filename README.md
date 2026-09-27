@@ -87,6 +87,9 @@ frontend usa `frontend/.env.local` (copiado de `frontend/.env.example`).
 | `STORAGE_DRIVER` | `local` | `local` o `s3`. |
 | `RUTA_IMAGENES` | `C:/Users/tu_usuario/pawfinder-imagenes` | Carpeta **fuera del proyecto** (modo local). |
 | `IMAGE_MAX_BYTES` | `5242880` | Tamaño máximo por imagen. |
+| `IMAGE_MAX_DIMENSION` | `1600` | Lado mayor al que se reescala la foto subida. |
+| `IMAGE_QUALITY` | `80` | Calidad (1–100) de la compresión. |
+| `IMAGE_OUTPUT_FORMAT` | `webp` | Formato de salida (`webp` o `jpeg`). |
 | `AWS_REGION` / `AWS_S3_BUCKET` / `AWS_ACCESS_KEY_ID` / `AWS_SECRET_ACCESS_KEY` | — | Solo si `STORAGE_DRIVER=s3`. |
 | `PUBLIC_BASE_URL` | `http://localhost:3000` | URL pública del API. |
 | `OPENAPI_SERVER_URL` | `http://localhost:3000` | URL que muestra Swagger UI. |
@@ -101,7 +104,6 @@ frontend usa `frontend/.env.local` (copiado de `frontend/.env.example`).
 |---|---|---|
 | `VITE_API_URL` | `/api` | URL base del API vista por el navegador (proxy de Vite en dev). |
 | `BACKEND_URL` | `http://localhost:3000` | Destino del proxy de Vite (solo lo lee `vite.config.ts`). |
-| `VITE_USAR_MOCKS` | `false` | `true` = datos de prueba en memoria, sin backend. |
 | `VITE_MAPA_CENTRO` | `19.4326,-99.1332` | Centro inicial del mapa. |
 | `VITE_MAPA_ZOOM` | `13` | Zoom inicial. |
 | `VITE_MAPA_MOSAICOS_URL` | *(vacío)* | Proveedor de mapas alternativo; vacío = OpenStreetMap (sin llave). |
@@ -127,6 +129,26 @@ npm run dev:frontend
 - Documentación interactiva (Swagger UI): `http://localhost:3000/api/docs`
 - OpenAPI JSON: `http://localhost:3000/api/openapi.json`
 - App web: `http://localhost:5173`
+
+### Verificación automática (pruebas y CI)
+
+Antes de subir un cambio, corre en local **el mismo conjunto de chequeos** que el
+pipeline:
+
+```bash
+npm run ci        # lint + tipos + pruebas + build (backend y frontend)
+```
+
+También se pueden correr por separado: `npm run lint`, `npm run typecheck`,
+`npm run test` y `npm run build`.
+
+El repositorio tiene **integración continua** en GitHub Actions
+(`.github/workflows/ci.yml`): en cada `push` y `pull request` a `main` o `dev`
+instala con `npm ci` y corre, para backend y frontend, `lint`, `typecheck`,
+`test` y `build`. Corre directo en el runner con `actions/setup-node` (versión de
+`.nvmrc`), **sin Docker, sin service containers y sin secretos**: las pruebas usan
+dobles (no tocan base de datos ni red). El pipeline falla (rojo) si cualquier paso
+falla.
 
 ## 7. Probar desde un celular en la misma red
 
@@ -164,7 +186,9 @@ npm run dev:red --workspace @pawfinder/frontend
 
 Todos los endpoints están documentados y se pueden probar desde `/api/docs`.
 El registro es **idempotente**: reintentar con la misma `Idempotency-Key`
-devuelve el mismo perrito y no crea otro.
+devuelve el mismo perrito y no crea otro. La foto se valida por contenido y se
+**comprime** (reescalada a `IMAGE_MAX_DIMENSION` y reencodeada en
+`IMAGE_OUTPUT_FORMAT`) antes de guardarse.
 
 ## 9. Capturas de pantalla
 
@@ -223,6 +247,12 @@ código está en [`docs/architecture.md`](./docs/architecture.md); el resumen:
 
 ## 12. Despliegue (punto extra)
 
+**Está en línea:**
+
+- App web: <https://paw-finder-frontend.vercel.app>
+- API: <https://pawfinder-hq2o.onrender.com> — documentación en
+  <https://pawfinder-hq2o.onrender.com/api/docs>
+
 Detalle completo en [`docs/deployment.md`](./docs/deployment.md). Resumen:
 
 - **Dónde corre cada pieza:** app web en **Vercel**, API en **Render**, MySQL en
@@ -243,7 +273,8 @@ Detalle completo en [`docs/deployment.md`](./docs/deployment.md). Resumen:
   las imágenes (ver `docs/deployment.md`).
 - **Sin Docker:** si se auto-hospeda, instalación directa con un servicio
   (`systemd`) y un proxy inverso (nginx/Caddy) al frente.
-- **URL pública:** _pendiente_ (se agrega aquí al publicar).
+- **URL pública:** app en <https://paw-finder-frontend.vercel.app> y API en
+  <https://pawfinder-hq2o.onrender.com>.
 
 ## 13. Estructura del repositorio
 

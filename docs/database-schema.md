@@ -86,11 +86,10 @@ El único campo **opcional** (nullable) es `marcas_distintivas`.
 `NOT NULL` los descriptivos y `006_raza_y_color_ojos_requeridos.sql` la raza y el
 color de ojos (los registros viejos incompletos se rellenan con valores neutros).
 
-`fecha_registro` es un `TIMESTAMP` que MySQL guarda en **UTC**. El backend lee
-con la conexión en UTC (`timezone: 'Z'` en `backend/src/db/pool.ts`) y el
-frontend manda el momento del registro en ISO 8601 con el offset del dispositivo
-(`frontend/src/utils/fecha.ts`); si no se envía, la base usa
-`CURRENT_TIMESTAMP`. Así la hora no se desfasa por la zona del servidor.
+`fecha_registro` es un `TIMESTAMP` que MySQL guarda en **UTC** y la pone el
+sistema con `CURRENT_TIMESTAMP`; el cliente **no** puede fijarla (si la envía, el
+backend la ignora). El backend lee con la conexión en UTC (`timezone: 'Z'` en
+`backend/src/db/pool.ts`).
 
 `ruta_imagen` es `UNIQUE` y es la clave que usa el storage del backend
 (`backend/src/storage`, no una URL pública) para localizar el archivo en el

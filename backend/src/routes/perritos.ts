@@ -12,6 +12,7 @@ import {
   idPerritoSchema,
 } from '../schemas/perrito.js';
 import type { StorageDriver } from '../storage/index.js';
+import { comprimirImagen } from '../storage/processImage.js';
 import { validarImagenReal } from '../storage/validateImage.js';
 
 export interface PerritosDeps {
@@ -70,7 +71,6 @@ function leerDatosDelCuerpo(body: Record<string, unknown>): unknown {
     patronPelajeId: aNumeroOpcional(body.patronPelajeId) ?? null,
     colorOjosId: aNumeroOpcional(body.colorOjosId) ?? null,
     marcasDistintivas: aTextoOpcional(body.marcasDistintivas),
-    fechaRegistro: aTextoOpcional(body.fechaRegistro),
     colorPrincipalId: aNumeroOpcional(body.colorPrincipalId),
     coloresAdicionalesIds: aArrayDeIds(body.coloresAdicionalesIds),
     latitud: aNumeroOpcional(body.latitud),
@@ -145,7 +145,8 @@ export function createPerritosRouter(deps: PerritosDeps): Router {
         throw new HttpError(400, validacion.motivo ?? 'La foto no es válida.');
       }
 
-      const guardado = await deps.storage.guardar(req.file.buffer, validacion.extension);
+      const comprimida = await comprimirImagen(req.file.buffer, validacion.extension, deps.config);
+      const guardado = await deps.storage.guardar(comprimida.buffer, comprimida.extension);
       const { perrito } = await deps.repository.crear(
         { ...datos.data, rutaImagen: guardado.ruta },
         clave.data,

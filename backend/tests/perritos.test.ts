@@ -4,9 +4,11 @@ import { createApp, type AppDeps } from '../src/app.js';
 import type { PerritoRegistro, PerritosRepository } from '../src/repositories/perritosRepository.js';
 import { testConfig } from './helpers/testConfig.js';
 
-const PNG = Buffer.from([
-  0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 0x00, 0x00, 0x00, 0x0d, 0x49, 0x48, 0x44, 0x52,
-]);
+// PNG 1x1 válido (se puede decodificar y comprimir con sharp).
+const PNG = Buffer.from(
+  'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==',
+  'base64',
+);
 
 const perrito: PerritoRegistro = {
   id: 1,
@@ -325,7 +327,7 @@ describe('POST /api/perritos', () => {
     );
   });
 
-  it('reenvía la fecha de registro enviada por el cliente', async () => {
+  it('ignora la fecha que mande el cliente: la pone el sistema', async () => {
     const crear = vi.fn(async () => ({ perrito: { ...perrito, id: 7 }, replay: false }));
     const app = appCon(repo({ crear }));
 
@@ -343,35 +345,14 @@ describe('POST /api/perritos', () => {
       .field('colorOjosId', '3')
       .field('latitud', '25.1')
       .field('longitud', '-100.2')
-      .field('fechaRegistro', '2026-09-26T23:20:00-06:00')
+      .field('fechaRegistro', '2020-01-01T00:00:00-06:00')
       .attach('foto', PNG, 'foto.png');
 
     expect(response.status).toBe(201);
     expect(crear).toHaveBeenCalledWith(
-      expect.objectContaining({ fechaRegistro: '2026-09-26T23:20:00-06:00' }),
+      expect.not.objectContaining({ fechaRegistro: expect.anything() }),
       'clave-fecha-123',
     );
-  });
-
-  it('400 si la fecha de registro no es una fecha ISO válida', async () => {
-    const response = await request(appCon())
-      .post('/api/perritos')
-      .set('Idempotency-Key', 'clave-fecha-mala-1')
-      .field('nombre', 'Luna')
-      .field('razaId', '2')
-      .field('colorPrincipalId', '1')
-      .field('sexo', 'hembra')
-      .field('etapaVida', 'adulto')
-      .field('tamano', 'mediano')
-      .field('longitudPelaje', 'corto')
-      .field('patronPelajeId', '2')
-      .field('colorOjosId', '3')
-      .field('latitud', '25.1')
-      .field('longitud', '-100.2')
-      .field('fechaRegistro', 'ayer por la tarde')
-      .attach('foto', PNG, 'foto.png');
-
-    expect(response.status).toBe(400);
   });
 
   it('400 si un campo descriptivo trae un valor fuera de la lista', async () => {

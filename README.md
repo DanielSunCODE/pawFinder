@@ -1,4 +1,5 @@
 # PawFinder — Registro de perritos de la calle
+***Este archivo puede ser visualizado más facilmente con Crtl+Shift+V***
 
 Aplicación para registrar perritos de la calle: quien encuentra uno le toma una
 foto (con cámara o subiendo una imagen), le pone un nombre, describe cómo es
@@ -120,6 +121,22 @@ openspec/    Especificaciones y cambios (spec-driven development)
 **No se necesita Docker en ningún punto** (la consigna académica lo prohíbe
 explícitamente; ver §25 para cómo se administra el servicio sin él).
 
+### 3.1 Cómo instalar las herramientas (si aún no las tienes)
+
+Si apenas empiezas, instala en este orden. Cierra y vuelve a abrir la terminal
+después de cada instalación, y comprueba con el comando de la tabla de arriba.
+
+- **Node.js (ya incluye npm):** descarga el instalador **LTS** desde
+  <https://nodejs.org> (elige "LTS", no "Current") y sigue el asistente. No
+  instales `npm` por separado: viene incluido con Node.
+- **Git:** descarga el instalador de <https://git-scm.com/downloads> y acepta
+  las opciones por defecto.
+- **MySQL:** no lo instales "de memoria"; tiene su propio paso a paso detallado
+  (instalación, arranque del servicio, contraseña de `root` y verificación) en
+  la sección 6.1. Léelo completo antes de llegar al Paso 4 de la instalación.
+
+Si ya tienes todo instalado, salta a la sección 4.
+
 **Windows (PowerShell):** si al correr `npm` aparece *"npm.ps1 cannot be loaded
 because running scripts is disabled on this system"*, es la política de
 ejecución de scripts de Windows. Dos soluciones:
@@ -158,10 +175,9 @@ npm install
 
 Resultado esperado: se crea una sola carpeta `node_modules/` en la raíz (con
 subcarpetas internas para cada workspace) y no debería haber errores rojos al
-final. Si `npm install` falla por la versión de Node, revisa el Paso 3 de la
-sección anterior.
+final. Si `npm install` falla por la versión de Node, revisa la sección 3.
 
-### Paso 3 — Copiar los archivos de entorno
+### Paso 3 — Copiar y editar los archivos de entorno
 
 Hay **dos** `.env` distintos: uno del backend y uno del frontend. Copia ambos:
 
@@ -175,19 +191,54 @@ cp backend/.env.example backend/.env
 cp frontend/.env.example frontend/.env.local
 ```
 
-Ninguno de los dos se sube al repositorio (`.gitignore` los excluye). Ajusta
-sus valores según la sección 5.
+Ninguno de los dos se sube al repositorio (`.gitignore` los excluye). **Copiar
+no basta:** ahora ábrelos con un editor de texto (Bloc de notas, VS Code, lo que
+tengas) y ajusta los valores marcados abajo.
 
-### Paso 4 — Preparar la base de datos
+En `backend/.env` (es el que más importa):
 
-Ver la sección 6 completa. En resumen, con `backend/.env` ya configurado:
+| Variable | Qué poner |
+|---|---|
+| `DB_PASSWORD` | La contraseña que le pusiste a `root` al instalar MySQL. Si la dejaste vacía, deja esto vacío. **Es la causa #1 de "Access denied".** |
+| `DB_USER` | `root` mientras pruebas en tu máquina. |
+| `DB_NAME` | `pawfinder` (el mismo nombre que usarás al crear la base en el Paso 4). |
+| `RUTA_IMAGENES` | Una carpeta real **fuera del proyecto**, por ejemplo `C:/Users/TU_USUARIO/pawfinder-imagenes` en Windows o `/home/TU_USUARIO/pawfinder-imagenes` en Linux/macOS. Reemplaza `TU_USUARIO` por tu usuario: la carpeta se crea sola, pero la ruta debe ser válida. |
+
+En `frontend/.env.local` **no hace falta tocar nada** para trabajar en tu
+computadora: los valores por defecto ya apuntan a `localhost`.
+
+El detalle de cada variable está en la sección 5.
+
+### Paso 4 — Instalar MySQL y crear la base de datos
+
+Este es el paso que más se traba la primera vez. Si nunca instalaste una base de
+datos, la sección 6.1 lo explica completo (instalar, arrancar el servicio, entrar
+a la consola y crear la base). El resumen es:
+
+1. Instalar MySQL Server (sección 6.1).
+2. **Arrancar el servicio** y confirmar que está corriendo (sección 6.1.4).
+3. Crear la base de datos (sección 6.1.6):
+
+   ```sql
+   CREATE DATABASE pawfinder CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci;
+   ```
+
+`db:migrate` **no crea la base**, solo las tablas: por eso hay que hacer este
+`CREATE DATABASE` antes.
+
+### Paso 5 — Aplicar el esquema y cargar datos de prueba
+
+Con `backend/.env` ya editado (Paso 3) y la base creada (Paso 4):
 
 ```bash
 npm run db:migrate
 npm run db:seed
 ```
 
-### Paso 5 — Levantar el proyecto
+Resultado esperado: una línea `+ 00X_archivo.sql aplicada` por cada migración, y
+al sembrar el aviso de los catálogos y los 16 perritos de prueba cargados.
+
+### Paso 6 — Levantar el proyecto
 
 ```bash
 npm run dev
@@ -198,7 +249,7 @@ logs de `backend` (`Backend escuchando en http://localhost:3000`) y de
 `frontend` (`Local: http://localhost:5173/`). Abre
 `http://localhost:5173` en el navegador.
 
-Si algo falla en este paso, revisa la sección 15 (Problemas comunes) antes de
+Si algo falla en este paso, revisa la sección 14 (Problemas comunes) antes de
 seguir.
 
 ---
@@ -261,25 +312,113 @@ bundle la incluye tal cual).
 
 ## 6. Base de datos
 
-### 6.1 Instalar MySQL localmente (si no usas Aiven)
+### 6.1 Instalar MySQL localmente (paso a paso)
 
-Instala MySQL Community Server 8.0 (o MariaDB 10.6+). Verifica:
+Salta esta sección solo si ya tienes un servidor MySQL en otro lado (por ejemplo
+Aiven): en ese caso ve directo a 6.2.
+
+> **Antes de empezar:** anota la contraseña que le pongas al usuario `root`. La
+> necesitas en `backend/.env` (`DB_PASSWORD`). Olvidarla es el error más común
+> después ("Access denied for user 'root'").
+
+#### 6.1.1 Windows
+
+1. Descarga el **MySQL Installer** desde
+   <https://dev.mysql.com/downloads/installer/> (el archivo
+   `mysql-installer-community-*.msi`; no hace falta crear cuenta, busca el
+   enlace *"No thanks, just start my download"*).
+2. Ejecútalo (Windows pedirá permiso de administrador). En el tipo de
+   instalación elige **Server only** (solo el servidor, lo más simple). Si
+   además quieres una interfaz gráfica, marca también **MySQL Workbench**.
+3. *Type and Networking*: deja **Development Computer** y el puerto **3306**.
+4. *Authentication Method*: deja la opción recomendada (**Strong Password
+   Encryption**).
+5. *Accounts and Roles*: escribe una contraseña para **root** y **apúntala**.
+6. *Windows Service*: deja marcado **Configure MySQL Server as a Windows
+   Service** y **Start the MySQL Server at System Startup**. Así MySQL arranca
+   solo al prender la computadora y no tienes que iniciarlo a mano cada vez.
+7. Pulsa **Execute**, espera a que termine y luego **Finish**.
+
+**Para usar MySQL en Windows**, abre del menú Inicio **"MySQL 8.0 Command Line
+Client"**: te pide la contraseña de root y te deja en el prompt `mysql>`, listo
+para los comandos de 6.1.6. (Si quieres escribir `mysql` desde PowerShell/cmd,
+hay que agregar `C:\Program Files\MySQL\MySQL Server 8.0\bin` al `PATH`; no es
+necesario para seguir esta guía.)
+
+#### 6.1.2 macOS
+
+La vía más simple es Homebrew (<https://brew.sh>; si no lo tienes, instálalo con
+el comando de una línea que indica su web):
+
+```bash
+brew install mysql
+brew services start mysql
+```
+
+Homebrew deja `root` **sin contraseña** en local (puedes entrar con
+`mysql -u root`). Si quieres ponerle una, corre `mysql_secure_installation`.
+
+#### 6.1.3 Linux (Debian/Ubuntu)
+
+```bash
+sudo apt update
+sudo apt install mysql-server
+sudo systemctl enable --now mysql
+```
+
+En Ubuntu el `root` de MySQL entra con `sudo mysql` (autenticación por socket,
+sin contraseña). En Fedora/RHEL el paquete es `mysql-server` y el servicio se
+llama `mysqld`.
+
+#### 6.1.4 Comprobar que MySQL está corriendo
+
+`db:migrate` fallará con `Can't connect to MySQL server` si el servicio está
+apagado. Compruébalo según tu sistema:
+
+| Sistema | Comando | Debe mostrar |
+|---|---|---|
+| Windows | `Get-Service MySQL*` (PowerShell) | `Status: Running`. Si no: `Start-Service MySQL80` |
+| macOS | `brew services list` | `mysql  started` |
+| Linux | `sudo systemctl status mysql` | `active (running)` |
+
+Y que el cliente esté instalado:
 
 ```bash
 mysql --version
 ```
 
-Crea la base y, si quieres, un usuario dedicado (opcional; también puedes usar
-`root`):
+#### 6.1.5 Entrar a la consola de MySQL
+
+| Sistema | Cómo |
+|---|---|
+| Windows | Abre **"MySQL 8.0 Command Line Client"** desde el menú Inicio |
+| macOS | `mysql -u root -p` (o `mysql -u root` si no le pusiste contraseña) |
+| Linux | `sudo mysql` |
+
+Cuando veas el prompt `mysql>`, ya estás dentro. Para salir: `exit`.
+
+#### 6.1.6 Crear la base de datos
+
+Ya dentro de la consola:
 
 ```sql
 CREATE DATABASE pawfinder CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci;
+```
+
+> Si da `Unknown collation: 'utf8mb4_0900_ai_ci'`, estás en MariaDB (u otro
+> MySQL antiguo): usa `COLLATE utf8mb4_unicode_ci` en su lugar.
+
+Opcional: en vez de `root`, crea un usuario solo para este proyecto. Si eres
+nuevo, **sáltalo** y usa `root`:
+
+```sql
 CREATE USER 'pawfinder'@'localhost' IDENTIFIED BY 'una_contraseña';
 GRANT ALL PRIVILEGES ON pawfinder.* TO 'pawfinder'@'localhost';
 FLUSH PRIVILEGES;
 ```
 
-Actualiza `backend/.env` con esos datos (`DB_USER`, `DB_PASSWORD`, `DB_NAME`).
+Por último, confirma que `backend/.env` (Paso 3) apunta a esto: `DB_HOST`,
+`DB_PORT`, `DB_USER`, `DB_PASSWORD` y `DB_NAME`.
 
 ### 6.2 Aplicar el esquema (migraciones)
 
@@ -654,7 +793,11 @@ la cámara abierta en el momento de tomar la foto), agrega el archivo a
 | Síntoma | Causa | Solución |
 |---|---|---|
 | `Configuracion de entorno invalida o incompleta: DB_USER` | Falta definir variables obligatorias en `backend/.env` | Revisa la tabla de la sección 5; copia de nuevo `backend/.env.example` si hace falta |
-| `Access denied for user ...` | Usuario/contraseña de MySQL incorrectos | Revisa `DB_USER`/`DB_PASSWORD` en `backend/.env` |
+| `Access denied for user ...` | Usuario/contraseña de MySQL incorrectos | Revisa `DB_USER`/`DB_PASSWORD` en `backend/.env` (la contraseña de `root` que pusiste al instalar, sección 6.1) |
+| `Can't connect to MySQL server on 'localhost'` / `ECONNREFUSED ...:3306` | El servicio de MySQL está apagado | Arranca el servicio: sección 6.1.4 |
+| `Unknown database 'pawfinder'` | No creaste la base; `db:migrate` no la crea | Créala con `CREATE DATABASE`: sección 6.1.6 |
+| `Unknown collation: 'utf8mb4_0900_ai_ci'` | Estás en MariaDB, que no conoce esa collation | Crea la base con `... COLLATE utf8mb4_unicode_ci`: sección 6.1.6 |
+| `'mysql' no se reconoce como un comando...` | El cliente no está en el `PATH` (Windows) | Usa el acceso directo "MySQL 8.0 Command Line Client": sección 6.1.5 |
 | `DB_SSL=true requiere DB_SSL_CA` | Falta el certificado CA cuando se usa Aiven | Define `DB_SSL_CA` con la ruta al `.pem` o el PEM entre comillas dobles |
 | Error de TLS al conectar con Aiven (`unable to verify the first certificate`) | El PEM quedó truncado o mal pegado | Envuélvelo en comillas dobles en `.env`, o usa una **ruta** a un archivo en vez de pegarlo |
 | `RUTA_IMAGENES es obligatoria` | Falta definir la carpeta de imágenes en modo `local` | Define `RUTA_IMAGENES` con una ruta **fuera** del proyecto |
@@ -995,7 +1138,7 @@ Servidor
 
 - [ ] Node.js ≥22.12 instalado (`node --version`)
 - [ ] npm ≥10 instalado (`npm --version`)
-- [ ] MySQL 8 (o MariaDB 10.6+) instalado y corriendo, o datos de Aiven a mano
+- [ ] MySQL 8 (o MariaDB 10.6+) instalado y el servicio corriendo (sección 6.1), o datos de Aiven a mano
 - [ ] Git instalado
 - [ ] Repositorio clonado
 - [ ] `npm install` ejecutado sin errores desde la raíz

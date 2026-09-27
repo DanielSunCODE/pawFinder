@@ -24,7 +24,11 @@ bucket por separado.
 
 ## Flujo normal
 
+Requiere que la base de `DB_NAME` ya exista (estos scripts no la crean).
+
 ```bash
+# 1) Crea la base si es la primera vez (cliente de MySQL):
+#    CREATE DATABASE pawfinder CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci;
 npm run db:migrate
 npm run db:seed
 ```

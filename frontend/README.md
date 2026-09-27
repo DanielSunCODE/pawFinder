@@ -260,4 +260,13 @@ dos perritos distintos pueden llamarse igual y estar en el mismo lugar.
 
 ## Capturas de pantalla
 
-_Pendiente: agregar capturas en celular con datos reales (mapa, lista, detalle, formulario con errores)._
+Capturas desde celular con datos reales; los archivos están en
+[`../docs/capturas/`](../docs/capturas).
+
+| Mapa | Lista (filtro por color) | Detalle |
+|---|---|---|
+| ![Mapa con un pin por perrito](../docs/capturas/mapa.png) | ![Lista filtrada por color](../docs/capturas/lista-filtro-color.png) | ![Detalle de un perrito](../docs/capturas/detalle.png) |
+
+| Formulario | Validación (falta la foto) |
+|---|---|
+| ![Formulario de registro con foto](../docs/capturas/registro-formulario.png) | ![Error de validación: falta la foto](../docs/capturas/registro-error-sin-foto.png) |

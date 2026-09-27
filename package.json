@@ -4,7 +4,7 @@
   "private": true,
   "description": "Registro de perritos de la calle - proyecto de Programacion logica y funcional",
   "engines": {
-    "node": ">=20"
+    "node": ">=22"
   },
   "workspaces": [
     "backend",

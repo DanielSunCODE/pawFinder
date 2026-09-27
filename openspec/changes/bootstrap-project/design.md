@@ -34,9 +34,9 @@ pawFinder/
 ├── frontend/
 │   ├── package.json  vite.config.ts  tsconfig.json  index.html  .env.example
 │   └── src/
-│       ├── main.tsx  App.tsx  router.tsx
-│       ├── api/client.ts
-│       ├── pages/{RegisterPage,ListPage,MapPage,DetailPage}.tsx
+│       ├── main.tsx  App.tsx  config.ts
+│       ├── api/{http,errores,tipos}.ts
+│       ├── pages/{RegistrarPage,ListaPage,MapaPage,DetallePage}.tsx
 │       └── styles/
 ├── backend/
 │   ├── package.json  tsconfig.json  .env.example
@@ -60,13 +60,13 @@ pawFinder/
 ### Stack y versiones
 | Capa | Tecnología | Versión objetivo |
 |---|---|---|
-| Runtime | Node.js | 20 LTS |
+| Runtime | Node.js | 22 LTS (mínimo 22.12 por Vite 8) |
 | Gestor | npm (workspaces) | 10.x |
-| Frontend | React + Vite + TypeScript | React 18, Vite 5, TS 5 |
-| Ruteo | React Router | 6.x |
-| Datos remotos | TanStack Query | 5.x |
-| Mapas | Leaflet + react-leaflet + OpenStreetMap | Leaflet 1.9 |
-| Estilos | Tailwind CSS | 3.x |
+| Frontend | React + Vite + TypeScript | React 19, Vite 8, TS 6 |
+| Ruteo | React Router | 8.x |
+| Datos remotos | fetch nativo (cliente propio) | nativo |
+| Mapas | Leaflet + react-leaflet + OpenStreetMap | Leaflet 1.9, react-leaflet 5 |
+| Estilos | Tailwind CSS | 4.x (`@tailwindcss/vite`) |
 | Backend | Express + TypeScript | Express 4, TS 5 |
 | Datos | mysql2 (SQL crudo) | 3.x |
 | Validación | Zod | 3.x |
@@ -99,7 +99,7 @@ El nombre del archivo lo genera el backend (UUID + extensión validada). La vali
 `CORS_ORIGIN` es una lista separada por comas. En producción solo el dominio del frontend en Vercel; en local el servidor de Vite. Los secretos viven en las variables de entorno de Vercel/Render (nunca en el repo); cada paquete aporta `.env.example`.
 
 Variables del backend: `NODE_ENV`, `PORT`, `CORS_ORIGIN`, `DB_HOST`, `DB_PORT`, `DB_USER`, `DB_PASSWORD`, `DB_NAME`, `DB_SSL`, `DB_SSL_CA`, `STORAGE_DRIVER`, `RUTA_IMAGENES`, `IMAGE_MAX_BYTES`, `AWS_REGION`, `AWS_S3_BUCKET`, `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`, `PUBLIC_BASE_URL`.
-Variables del frontend: `VITE_API_URL`, `VITE_MAP_TILE_URL` (opcional).
+Variables del frontend: `VITE_API_URL`, `VITE_USAR_MOCKS`, `BACKEND_URL` (proxy de Vite), `VITE_MAPA_CENTRO`, `VITE_MAPA_ZOOM` y `VITE_MAPA_MOSAICOS_URL` (opcional).
 
 ### Contexto seguro para cámara y ubicación
 En producción Vercel entrega HTTPS. En local, `localhost` es contexto seguro. Para probar desde un celular en la misma red se documentan dos vías: servidor Vite con HTTPS (certificado de desarrollo) o un túnel HTTPS (Cloudflare Tunnel/ngrok). El README debe explicarlo; el código no cambia.

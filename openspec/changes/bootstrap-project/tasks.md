@@ -35,12 +35,12 @@
 
 ## 5. Frontend foundation
 
-- [ ] 5.1 Configurar Vite + React + TypeScript y Tailwind, con meta viewport responsive
-- [ ] 5.2 Implementar `src/router.tsx` con rutas base `registro`, `lista`, `mapa` y `detalle`
-- [ ] 5.3 Implementar `src/api/client.ts` con URL base desde `VITE_API_URL` y traducción de errores a mensajes entendibles
-- [ ] 5.4 Crear las vistas base (`RegisterPage`, `ListPage`, `MapPage`, `DetailPage`) con placeholders
-- [ ] 5.5 Escribir `frontend/.env.example` con `VITE_API_URL` y `VITE_MAP_TILE_URL`
-- [ ] 5.6 Documentar/configurar el modo HTTPS para probar cámara y ubicación desde un celular en la misma red
+- [x] 5.1 Configurar Vite + React + TypeScript y Tailwind, con meta viewport responsive
+- [x] 5.2 Implementar `src/router.tsx` con rutas base `registro`, `lista`, `mapa` y `detalle`
+- [x] 5.3 Implementar `src/api/client.ts` con URL base desde `VITE_API_URL` y traducción de errores a mensajes entendibles
+- [x] 5.4 Crear las vistas base (`RegisterPage`, `ListPage`, `MapPage`, `DetailPage`) con placeholders
+- [x] 5.5 Escribir `frontend/.env.example` con `VITE_API_URL` y `VITE_MAP_TILE_URL`
+- [x] 5.6 Documentar/configurar el modo HTTPS para probar cámara y ubicación desde un celular en la misma red
 
 ## 6. Documentación
 

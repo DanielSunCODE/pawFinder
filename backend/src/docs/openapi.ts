@@ -1,9 +1,26 @@
 import { OpenAPIRegistry, OpenApiGeneratorV31 } from '@asteasolutions/zod-to-openapi';
+import { filtrosPerritosSchema } from '../schemas/perrito.js';
 import {
+  coloresResponseSchema,
+  colorSchema,
+  conteoColorSchema,
   errorResponseSchema,
+  estadisticasResponseSchema,
   healthResponseSchema,
+  idempotencyHeaderSchema,
   perritoIdParamSchema,
+  perritoResponseSchema,
+  perritoSchema,
+  perritosResponseSchema,
+  razaSchema,
+  razasResponseSchema,
+  subidaPerritoSchema,
 } from './schemas.js';
+
+const respuestaError = (description: string) => ({
+  description,
+  content: { 'application/json': { schema: errorResponseSchema } },
+});
 
 /**
  * Construye el documento OpenAPI 3.1 a partir de los esquemas Zod.
@@ -18,9 +35,19 @@ import {
 export function createOpenApiDocument(serverUrl: string) {
   const registry = new OpenAPIRegistry();
 
-  const successSchema = registry.register('HealthResponse', healthResponseSchema);
-  const errorSchema = registry.register('ErrorResponse', errorResponseSchema);
-  const idParamSchema = registry.register('PerritoIdParam', perritoIdParamSchema);
+  const saludoOk = registry.register('HealthResponse', healthResponseSchema);
+  registry.register('ErrorResponse', errorResponseSchema);
+  const idParam = registry.register('PerritoIdParam', perritoIdParamSchema);
+  registry.register('Raza', razaSchema);
+  registry.register('Color', colorSchema);
+  registry.register('Perrito', perritoSchema);
+  const perritoResp = registry.register('PerritoResponse', perritoResponseSchema);
+  const perritosResp = registry.register('PerritosResponse', perritosResponseSchema);
+  const razasResp = registry.register('RazasResponse', razasResponseSchema);
+  const coloresResp = registry.register('ColoresResponse', coloresResponseSchema);
+  registry.register('ConteoColor', conteoColorSchema);
+  const estadisticasResp = registry.register('EstadisticasResponse', estadisticasResponseSchema);
+  const subida = registry.register('SubidaPerrito', subidaPerritoSchema);
 
   registry.registerPath({
     method: 'get',
@@ -31,12 +58,65 @@ export function createOpenApiDocument(serverUrl: string) {
     responses: {
       200: {
         description: 'El servicio está activo.',
-        content: { 'application/json': { schema: successSchema } },
+        content: { 'application/json': { schema: saludoOk } },
       },
-      500: {
-        description: 'Error inesperado.',
-        content: { 'application/json': { schema: errorSchema } },
+      500: respuestaError('Error inesperado.'),
+    },
+  });
+
+  registry.registerPath({
+    method: 'get',
+    path: '/api/perritos',
+    tags: ['Perritos'],
+    summary: 'Listar perritos',
+    description:
+      'Lista los perritos registrados. El filtrado y el orden se resuelven en SQL, no en el navegador.',
+    request: { query: filtrosPerritosSchema },
+    responses: {
+      200: {
+        description: 'Listado de perritos (puede ser vacío).',
+        content: { 'application/json': { schema: perritosResp } },
       },
+      400: respuestaError('Filtros inválidos.'),
+      500: respuestaError('Error inesperado.'),
+    },
+  });
+
+  registry.registerPath({
+    method: 'post',
+    path: '/api/perritos',
+    tags: ['Perritos'],
+    summary: 'Registrar un perrito',
+    description:
+      'Registra un perrito con su foto. Es idempotente: si se repite con la misma Idempotency-Key, devuelve el mismo perrito y no crea otro.',
+    request: {
+      headers: idempotencyHeaderSchema,
+      body: { content: { 'multipart/form-data': { schema: subida } } },
+    },
+    responses: {
+      201: {
+        description: 'Perrito registrado (o devuelto por idempotencia).',
+        content: { 'application/json': { schema: perritoResp } },
+      },
+      400: respuestaError('Datos o foto inválidos, o falta la clave de idempotencia.'),
+      500: respuestaError('Error inesperado.'),
+    },
+  });
+
+  registry.registerPath({
+    method: 'get',
+    path: '/api/perritos/{id}',
+    tags: ['Perritos'],
+    summary: 'Detalle de un perrito',
+    request: { params: idParam },
+    responses: {
+      200: {
+        description: 'Perrito encontrado.',
+        content: { 'application/json': { schema: perritoResp } },
+      },
+      400: respuestaError('Identificador inválido.'),
+      404: respuestaError('Perrito no encontrado.'),
+      500: respuestaError('Error inesperado.'),
     },
   });
 
@@ -47,7 +127,7 @@ export function createOpenApiDocument(serverUrl: string) {
     summary: 'Foto de un perrito',
     description:
       'Devuelve la imagen del perrito. El backend resuelve la ubicación y la lee por el storage activo; el cliente nunca ve la carpeta ni el bucket.',
-    request: { params: idParamSchema },
+    request: { params: idParam },
     responses: {
       200: {
         description: 'Imagen del perrito.',
@@ -57,14 +137,53 @@ export function createOpenApiDocument(serverUrl: string) {
           'image/webp': { schema: { type: 'string', format: 'binary' } },
         },
       },
-      400: {
-        description: 'Identificador inválido.',
-        content: { 'application/json': { schema: errorSchema } },
+      400: respuestaError('Identificador inválido.'),
+      404: respuestaError('Perrito o foto no encontrados.'),
+    },
+  });
+
+  registry.registerPath({
+    method: 'get',
+    path: '/api/razas',
+    tags: ['Catálogos'],
+    summary: 'Catálogo de razas',
+    description: 'Incluye "Sin raza definida / Criollo".',
+    responses: {
+      200: {
+        description: 'Razas disponibles.',
+        content: { 'application/json': { schema: razasResp } },
       },
-      404: {
-        description: 'Perrito o foto no encontrados.',
-        content: { 'application/json': { schema: errorSchema } },
+      500: respuestaError('Error inesperado.'),
+    },
+  });
+
+  registry.registerPath({
+    method: 'get',
+    path: '/api/colores',
+    tags: ['Catálogos'],
+    summary: 'Catálogo de colores',
+    responses: {
+      200: {
+        description: 'Colores disponibles.',
+        content: { 'application/json': { schema: coloresResp } },
       },
+      500: respuestaError('Error inesperado.'),
+    },
+  });
+
+  registry.registerPath({
+    method: 'get',
+    path: '/api/estadisticas',
+    tags: ['Perritos'],
+    summary: 'Estadísticas del registro',
+    description:
+      'Conteo agregado en SQL: total de perritos y cuántos hay por color (consulta con GROUP BY).',
+    responses: {
+      200: {
+        description: 'Estadísticas del registro.',
+        content: { 'application/json': { schema: estadisticasResp } },
+      },
+      500: respuestaError('Error inesperado.'),
     },
   });
 

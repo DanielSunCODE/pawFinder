@@ -11,9 +11,11 @@ copy backend\.env.example backend\.env     # ajustar DB y RUTA_IMAGENES
 npm run db:migrate
 npm run db:seed
 
-npm run dev:backend    # http://localhost:3000  (docs en /api/docs)
-npm run dev:frontend   # http://localhost:5173
+npm run dev            # backend (http://localhost:3000) + frontend (http://localhost:5173)
 ```
+
+También puedes levantarlos por separado con `npm run dev:backend` y
+`npm run dev:frontend`.
 
 ## Estructura y responsabilidades
 

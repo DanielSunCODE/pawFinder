@@ -1,19 +1,21 @@
 import { Router } from 'express';
-import type { Pool } from 'mysql2/promise';
+import type { AppConfig } from '../config/env.js';
+import type { PerritosRepository } from '../repositories/perritosRepository.js';
 import type { StorageDriver } from '../storage/index.js';
 import { createHealthRouter } from './health.js';
-import { createPhotoRouter } from './photos.js';
+import { createPerritosRouter } from './perritos.js';
 
 export interface ApiDeps {
-  pool: Pool;
+  repository: PerritosRepository;
   storage: StorageDriver;
+  config: AppConfig;
 }
 
 export function createApiRouter(deps: ApiDeps): Router {
   const router = Router();
 
   router.use(createHealthRouter());
-  router.use(createPhotoRouter(deps.pool, deps.storage));
+  router.use(createPerritosRouter(deps));
 
   return router;
 }

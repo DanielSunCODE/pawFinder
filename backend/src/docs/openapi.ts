@@ -97,7 +97,7 @@ export function createOpenApiDocument(serverUrl: string) {
     tags: ['Perritos'],
     summary: 'Registrar un perrito',
     description:
-      'Registra un perrito con su foto. Es idempotente: si se repite con la misma Idempotency-Key, devuelve el mismo perrito y no crea otro.',
+      'Registra un perrito con su foto. La imagen se valida por contenido (JPG/PNG/WEBP) y se comprime (reescalada y reencodificada) antes de guardarse. Es idempotente: si se repite con la misma Idempotency-Key, devuelve el mismo perrito y no crea otro.',
     request: {
       headers: idempotencyHeaderSchema,
       body: { content: { 'multipart/form-data': { schema: subida } } },

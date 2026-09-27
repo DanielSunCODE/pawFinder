@@ -5,7 +5,7 @@
   "description": "API REST del registro de perritos de la calle",
   "type": "module",
   "engines": {
-    "node": ">=20"
+    "node": ">=22"
   },
   "scripts": {
     "dev": "tsx watch src/index.ts",

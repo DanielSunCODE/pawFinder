@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { loadEnv } from '../src/config/env.js';
+import { loadDbEnv, loadEnv } from '../src/config/env.js';
 
 const baseEnv = {
   DB_HOST: '127.0.0.1',
@@ -17,13 +17,14 @@ describe('loadEnv', () => {
     expect(config.PORT).toBe(3000);
     expect(config.NODE_ENV).toBe('development');
     expect(config.DB_SSL).toBe(false);
+    expect(config.DB_CONNECTION_LIMIT).toBe(10);
     expect(config.IMAGE_MAX_BYTES).toBe(5 * 1024 * 1024);
   });
 
   it('falla nombrando la variable faltante sin exponer su valor', () => {
-    const { DB_HOST: _omit, ...incompleto } = baseEnv;
+    const { DB_USER: _omit, ...incompleto } = baseEnv;
 
-    expect(() => loadEnv(incompleto as NodeJS.ProcessEnv)).toThrowError(/DB_HOST/);
+    expect(() => loadEnv(incompleto as NodeJS.ProcessEnv)).toThrowError(/DB_USER/);
     expect(() => loadEnv(incompleto as NodeJS.ProcessEnv)).not.toThrowError(
       /clave-super-secreta/,
     );
@@ -42,5 +43,22 @@ describe('loadEnv', () => {
     };
 
     expect(() => loadEnv(envS3 as NodeJS.ProcessEnv)).toThrowError(/AWS_S3_BUCKET/);
+  });
+});
+
+describe('loadDbEnv', () => {
+  it('valida solo la configuracion de base de datos (sin storage)', () => {
+    const { STORAGE_DRIVER: _s, RUTA_IMAGENES: _r, ...soloDb } = baseEnv;
+    const config = loadDbEnv(soloDb as NodeJS.ProcessEnv);
+
+    expect(config.DB_NAME).toBe('pawfinder');
+    expect(config.DB_HOST).toBe('127.0.0.1');
+    expect(config.DB_CONNECTION_LIMIT).toBe(10);
+  });
+
+  it('falla si falta DB_NAME', () => {
+    const { DB_NAME: _omit, ...sinNombre } = baseEnv;
+
+    expect(() => loadDbEnv(sinNombre as NodeJS.ProcessEnv)).toThrowError(/DB_NAME/);
   });
 });

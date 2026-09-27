@@ -29,7 +29,7 @@ El repositorio está vacío salvo por el PDF de la consigna y la configuración 
 ## Impact
 
 - **Nuevo código**: `frontend/`, `backend/`, `database/`, `docs/`, `.gitignore`, `.env.example` por paquete.
-- **Dependencias**: Node.js 20 LTS, npm workspaces, React, Vite, TypeScript, Express, `mysql2`, Zod, `@aws-sdk/client-s3`, `sharp`, Vitest, Supertest; MySQL 8 local y Aiven; AWS S3.
+- **Dependencias**: Node.js 22 LTS, npm workspaces, React, Vite, TypeScript, Express, `mysql2`, Zod, `@aws-sdk/client-s3`, `sharp`, Vitest, Supertest; MySQL 8 local y Aiven; AWS S3.
 - **Documentación**: README raíz pasa a ser el contrato de instalación evaluado.
 - **Procesos**: se activan ramas y pull requests por rol; ningún cambio futuro debe introducir Docker ni comprometer el modo de instalación local.
 - **Riesgos**: el acceso a cámara/geolocalización exige HTTPS/localhost; debe documentarse cómo probar desde celular en la misma red.

@@ -4,7 +4,7 @@
   "private": true,
   "description": "Registro de perritos de la calle - proyecto de Programacion logica y funcional",
   "engines": {
-    "node": ">=20"
+    "node": ">=22"
   },
   "workspaces": [
     "backend",
@@ -16,6 +16,12 @@
     "dev:backend": "npm run dev --workspace @pawfinder/backend",
     "dev:frontend": "npm run dev --workspace @pawfinder/frontend",
     "build:backend": "npm run build --workspace @pawfinder/backend",
-    "test:backend": "npm run test --workspace @pawfinder/backend"
+    "test:backend": "npm run test --workspace @pawfinder/backend",
+    "db:migrate": "tsx database/scripts/migrate.ts",
+    "db:seed": "tsx database/scripts/seed.ts",
+    "db:reset": "tsx database/scripts/reset-local.ts",
+    "db:backup": "bash database/scripts/backup.sh",
+    "db:restore": "bash database/scripts/restore.sh",
+    "db:typecheck": "tsc -p database/tsconfig.json"
   }
 }

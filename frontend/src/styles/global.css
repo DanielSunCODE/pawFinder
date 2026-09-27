@@ -1,0 +1,137 @@
+/* Estilos globales con Tailwind CSS v4.
+   - @theme: colores, tipografía, radios y sombras del diseño. Generan clases como
+     bg-primario, text-texto-suave, rounded-tarjeta o shadow-tarjeta.
+   - @layer components: los botones, que se repiten en toda la app.
+   - @utility: medidas que dependen del encabezado y de la navegación inferior. */
+@import 'tailwindcss';
+
+@theme {
+  --font-sans: 'Nunito Variable', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+
+  --color-fondo: #fbf7f2;
+  --color-superficie: #ffffff;
+  --color-superficie-2: #f4ede4;
+  --color-borde: #e8ded2;
+  --color-borde-fuerte: #d6c8b8;
+  --color-texto: #2a211b;
+  --color-texto-suave: #6a5c52;
+
+  --color-primario: #b94e1c;
+  --color-primario-hover: #a4441a;
+  --color-primario-vivo: #e8743a;
+  --color-primario-suave: #fbe6d9;
+
+  --color-exito: #276b4d;
+  --color-exito-suave: #e1f2e9;
+  --color-error: #b3362d;
+  --color-error-suave: #fbe4e1;
+  --color-aviso-suave: #fff4d6;
+  --color-aviso-texto: #7a5a00;
+
+  --radius-tarjeta: 20px;
+  --radius-campo: 14px;
+  --radius-chico: 10px;
+
+  --shadow-suave: 0 1px 2px rgb(42 33 27 / 0.06);
+  --shadow-tarjeta: 0 1px 2px rgb(42 33 27 / 0.05), 0 6px 20px rgb(42 33 27 / 0.07);
+  --shadow-flotante: 0 12px 40px rgb(42 33 27 / 0.18);
+}
+
+/* Medidas fijas del diseño (se usan en los cálculos de alto) */
+:root {
+  --alto-encabezado: 60px;
+  --alto-navegacion: 64px;
+  --abajo-seguro: env(safe-area-inset-bottom, 0px); /* barra de gestos del celular */
+}
+
+@layer base {
+  html {
+    -webkit-text-size-adjust: 100%;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  body {
+    @apply bg-fondo font-sans text-base/normal text-texto antialiased;
+  }
+
+  h1,
+  h2,
+  h3 {
+    @apply leading-tight tracking-[-0.015em];
+  }
+
+  a {
+    @apply text-primario;
+  }
+
+  button {
+    @apply cursor-pointer;
+  }
+
+  :focus-visible {
+    @apply outline-3 outline-offset-2 outline-primario-vivo;
+  }
+}
+
+@layer components {
+  .boton {
+    @apply inline-flex min-h-12 items-center justify-center gap-2 rounded-full border-[1.5px] border-transparent px-[22px] leading-none font-extrabold whitespace-nowrap no-underline transition-[background-color,border-color,transform] duration-150 active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-55;
+  }
+
+  .boton--primario {
+    @apply bg-primario text-white hover:bg-primario-hover;
+  }
+
+  .boton--secundario {
+    @apply border-borde-fuerte bg-superficie text-texto hover:border-texto-suave;
+  }
+
+  .boton--chico {
+    @apply min-h-10 px-4 text-[0.95rem];
+  }
+
+  .boton--bloque {
+    @apply w-full;
+  }
+}
+
+/* Alto del mapa principal: la pantalla menos el encabezado y la navegación inferior (celular) */
+@utility alto-mapa {
+  height: calc(100dvh - var(--alto-encabezado) - var(--alto-navegacion) - var(--abajo-seguro));
+
+  @media (width >= 48rem) {
+    height: calc(100dvh - var(--alto-encabezado));
+  }
+}
+
+/* Alto de la navegación inferior, contando la barra de gestos del celular */
+@utility alto-nav-movil {
+  height: calc(var(--alto-navegacion) + var(--abajo-seguro));
+}
+
+/* Espacio abajo para que la navegación inferior no tape el contenido */
+@utility pb-nav {
+  padding-bottom: calc(var(--alto-navegacion) + var(--abajo-seguro) + 28px);
+}
+
+/* Espacio abajo respetando la barra de gestos del celular */
+@utility pb-seguro {
+  padding-bottom: calc(12px + var(--abajo-seguro));
+}
+
+/* Flecha de los <select> */
+@utility select-flecha {
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='20' height='20' fill='none' stroke='%236a5c52' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round' viewBox='0 0 24 24'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 14px center;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}

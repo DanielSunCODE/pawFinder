@@ -35,7 +35,9 @@ export const estilos = {
   // Foto
   foto: 'flex flex-col gap-3',
   fotoMarco: 'relative grid aspect-4/3 place-items-center overflow-hidden rounded-campo border-2 bg-superficie-2 md:max-h-85',
-  fotoVista: 'size-full object-cover',
+  // `absolute inset-0`: la foto ocupa exactamente el marco y se recorta al centro. Sin esto, una foto
+  // grande agrandaba la rejilla del marco y se veía sólo su parte de arriba.
+  fotoVista: 'absolute inset-0 size-full object-cover object-center',
   fotoVacia: 'flex flex-col items-center gap-1.5 p-4 text-center text-texto-suave [&>p]:font-bold [&>p]:text-texto [&>span]:text-xs',
   fotoProcesando: 'absolute inset-0 flex flex-col items-center justify-center gap-2 bg-fondo/85 font-bold',
   fotoBotones: 'grid grid-cols-2 gap-2.5 [&_.boton]:px-3',

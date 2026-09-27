@@ -19,6 +19,44 @@ function AlTocarMapa({ alTocar }: { alTocar: (ubicacion: Ubicacion) => void }) {
   return null
 }
 
+/**
+ * Zoom con la rueda del mouse (computadora) sin atrapar el scroll de la página.
+ * Mientras la persona va bajando por el formulario, la rueda sigue moviendo la página aunque el
+ * cursor pase por encima del mapa (también si ya llegó al final y sigue girando). Cuando la rueda
+ * se detiene un momento, el siguiente giro sobre el mapa hace zoom.
+ * En el celular no cambia nada: ahí se usa el gesto de pellizcar.
+ */
+const PAUSA_ANTES_DE_ZOOM_MS = 350
+
+function ZoomConRueda() {
+  const mapa = useMap()
+  useEffect(() => {
+    let espera: number | undefined
+    const reactivarDespuesDeLaPausa = () => {
+      window.clearTimeout(espera)
+      espera = window.setTimeout(() => mapa.scrollWheelZoom.enable(), PAUSA_ANTES_DE_ZOOM_MS)
+    }
+    // La página se desplazó: la rueda es para la página, no para el mapa.
+    const alDesplazarPagina = () => {
+      mapa.scrollWheelZoom.disable()
+      reactivarDespuesDeLaPausa()
+    }
+    // Mientras la rueda siga girando dentro de ese mismo movimiento, se alarga la espera.
+    const alGirarRueda = () => {
+      if (!mapa.scrollWheelZoom.enabled()) reactivarDespuesDeLaPausa()
+    }
+    mapa.scrollWheelZoom.enable()
+    window.addEventListener('scroll', alDesplazarPagina, { passive: true })
+    window.addEventListener('wheel', alGirarRueda, { passive: true, capture: true })
+    return () => {
+      window.removeEventListener('scroll', alDesplazarPagina)
+      window.removeEventListener('wheel', alGirarRueda, { capture: true })
+      window.clearTimeout(espera)
+    }
+  }, [mapa])
+  return null
+}
+
 /** Centra el mapa en `destino` cada vez que cambia. */
 function CentrarEn({ destino }: { destino: Ubicacion | null }) {
   const mapa = useMap()
@@ -81,6 +119,7 @@ export function SelectorUbicacion({ ubicacion, alCambiar, error }: Props) {
 
       <div className={estilos.mapaMarco}>
         <MapaBase className={estilos.mapa} scrollWheelZoom={false}>
+          <ZoomConRueda />
           <AlTocarMapa alTocar={moverPin} />
           <CentrarEn destino={destino} />
           {ubicacion && (

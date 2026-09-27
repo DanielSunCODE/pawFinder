@@ -5,12 +5,20 @@ import type { ApiPerritos, FiltrosPerritos, Id, RespuestaError } from './tipos'
 const TIEMPO_MAXIMO_CONSULTA_MS = 15_000
 const TIEMPO_MAXIMO_ENVIO_MS = 45_000 // subir una foto con mala señal puede tardar
 
+/** Convierte [{ field, message }] (formato del backend) en { campo: mensaje }. */
+function camposDesdeDetalles(detalles: RespuestaError['error']['details']): Record<string, string> {
+  return (detalles ?? [])
+    .filter((detalle) => detalle.field && detalle.message)
+    .reduce<Record<string, string>>((campos, { field, message }) => ({ ...campos, [field as string]: message as string }), {})
+}
+
 /** Lee el cuerpo de una respuesta con error y arma un ErrorApi con mensaje entendible. */
 async function errorDesdeRespuesta(respuesta: Response): Promise<ErrorApi> {
   try {
-    const cuerpo = (await respuesta.json()) as Partial<RespuestaError>
-    const mensaje = cuerpo.error?.mensaje || mensajePorEstado(respuesta.status)
-    return new ErrorApi(mensaje, respuesta.status, cuerpo.error?.campos ?? {})
+    const { error } = (await respuesta.json()) as Partial<RespuestaError>
+    const mensaje = error?.mensaje || error?.message || mensajePorEstado(respuesta.status)
+    const campos = error?.campos ?? camposDesdeDetalles(error?.details)
+    return new ErrorApi(mensaje, respuesta.status, campos)
   } catch {
     // El backend no mandó JSON (por ejemplo, un 502 del proxy). Usamos el mensaje por estado.
     return new ErrorApi(mensajePorEstado(respuesta.status), respuesta.status)
@@ -47,7 +55,10 @@ export function crearApiHttp(urlBase: string): ApiPerritos {
       throw new ErrorApi(mensajePorEstado(SIN_CONEXION), SIN_CONEXION)
     }
     if (!respuesta.ok) throw await errorDesdeRespuesta(respuesta)
-    return (await respuesta.json()) as T
+    const cuerpo: unknown = await respuesta.json()
+    // El backend actual envuelve las respuestas en { data: ... } (openspec); el contrato viejo no.
+    const envuelto = typeof cuerpo === 'object' && cuerpo !== null && !Array.isArray(cuerpo) && 'data' in cuerpo
+    return (envuelto ? (cuerpo as { data: T }).data : cuerpo) as T
   }
 
   return {

@@ -1,0 +1,129 @@
+/* Estilos de Leaflet y de los pines. Van en CSS normal (no en clases de Tailwind) porque
+   Leaflet arma su propio HTML y no podemos ponerle clases. Usan los colores del tema de Tailwind. */
+
+.leaflet-container {
+  /* Encierra los z-index internos de Leaflet para que no tapen el encabezado */
+  isolation: isolate;
+  background: #ede7df;
+  font-family: var(--font-sans);
+}
+
+.leaflet-control-attribution {
+  font-size: 10px;
+}
+
+.leaflet-bar {
+  border: none !important;
+  border-radius: 12px !important;
+  overflow: hidden;
+  box-shadow: var(--shadow-tarjeta) !important;
+}
+
+.leaflet-bar a {
+  width: 40px !important;
+  height: 40px !important;
+  line-height: 40px !important;
+  color: var(--color-texto) !important;
+}
+
+/* ── Pin con foto del perrito ───────────────────────────── */
+.pin-perrito {
+  background: none;
+  border: none;
+}
+
+.pin-perrito__marco {
+  position: relative;
+  display: block;
+  width: 46px;
+  height: 46px;
+  padding: 3px;
+  border-radius: 50%;
+  background: var(--color-pin);
+  box-shadow:
+    0 0 0 2px #fff,
+    0 6px 14px rgb(42 33 27 / 0.35);
+  transition: transform 0.15s;
+}
+
+.pin-perrito__marco::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  bottom: -9px;
+  width: 0;
+  height: 0;
+  border-left: 8px solid transparent;
+  border-right: 8px solid transparent;
+  border-top: 11px solid #fff;
+  transform: translateX(-50%);
+}
+
+.pin-perrito__marco img {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  object-fit: cover;
+  background: #fff;
+}
+
+.pin-perrito:hover .pin-perrito__marco {
+  transform: scale(1.08) translateY(-2px);
+}
+
+/* ── Pin de ubicación (gota) ────────────────────────────── */
+.pin-ubicacion {
+  background: none;
+  border: none;
+}
+
+.pin-ubicacion__gota {
+  position: absolute;
+  left: 4px;
+  top: 0;
+  width: 32px;
+  height: 32px;
+  border-radius: 50% 50% 50% 0;
+  background: var(--color-primario);
+  border: 3px solid #fff;
+  box-shadow: 0 6px 14px rgb(42 33 27 / 0.35);
+  transform: rotate(-45deg);
+}
+
+.pin-ubicacion__gota::after {
+  content: '';
+  position: absolute;
+  inset: 8px;
+  border-radius: 50%;
+  background: #fff;
+}
+
+/* ── Globo (popup) del perrito ──────────────────────────── */
+.popup-perrito .leaflet-popup-content-wrapper {
+  padding: 0;
+  border-radius: 18px;
+  overflow: hidden;
+  box-shadow: var(--shadow-flotante);
+}
+
+.popup-perrito .leaflet-popup-content {
+  margin: 0;
+  font-size: 1rem;
+  line-height: 1.4;
+}
+
+.popup-perrito .leaflet-popup-close-button {
+  top: 8px !important;
+  right: 8px !important;
+  width: 30px !important;
+  height: 30px !important;
+  border-radius: 50%;
+  background: rgb(255 255 255 / 0.9) !important;
+  color: var(--color-texto) !important;
+  font: 700 20px/28px var(--font-sans) !important;
+}
+
+/* El botón del globo debe quedar blanco aunque Leaflet pinte de azul los enlaces */
+.popup-perrito .boton {
+  color: #fff;
+}

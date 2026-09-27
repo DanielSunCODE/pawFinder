@@ -1,6 +1,6 @@
 // ─────────────────────────────────────────────────────────────────────────────
 // CONTRATO DE LA API, visto desde el frontend.
-// Debe coincidir con docs/contrato-api.md en la raíz del repositorio.
+// Debe coincidir con lo que acuerde el equipo (contrato-api.md / openspec).
 // Si el backend cambia un nombre o un tipo, se cambia aquí y en ese documento.
 // ─────────────────────────────────────────────────────────────────────────────
 
@@ -56,19 +56,25 @@ export interface NuevoPerrito {
 }
 
 /** Forma de cualquier respuesta de error del backend. */
+/**
+ * Cuerpo de una respuesta con error. Se aceptan los dos formatos que hay en el equipo:
+ * - el del backend actual (openspec):  { error: { message, details: [{ field, message }] } }
+ * - el de docs/contrato-api.md:        { error: { mensaje, campos: { campo: mensaje } } }
+ * Cuando el equipo fije uno solo, se puede quitar el otro.
+ */
 export interface RespuestaError {
   error: {
     /** Mensaje para humanos, en español. Nunca "Error 400". */
-    mensaje: string
+    message?: string
+    mensaje?: string
+    /** Errores por campo (formato del backend actual). */
+    details?: { field?: string; message?: string }[]
     /** Errores por campo, con las mismas llaves que NuevoPerrito, más "foto". */
     campos?: Record<string, string>
   }
 }
 
-/**
- * Todo lo que el frontend le puede pedir al backend.
- * Hay dos implementaciones: la real (http.ts) y la de datos de prueba (mock/).
- */
+/** Todo lo que el frontend le puede pedir al backend (implementado en http.ts). */
 export interface ApiPerritos {
   listarPerritos(filtros?: FiltrosPerritos): Promise<Perrito[]>
   obtenerPerrito(id: Id): Promise<Perrito>

@@ -2,6 +2,8 @@
 
 Este archivo es el **system prompt / guía de trabajo** del backend. Cualquier persona o asistente de IA que modifique endpoints debe leerlo y seguirlo.
 
+**Contexto completo de la consigna:** ver [`MASTER_PROMPT.md`](../MASTER_PROMPT.md) en la raíz. Este archivo solo cubre las reglas específicas del backend.
+
 ## Regla principal
 
 Un cambio de endpoint **no está terminado** si no actualiza, en el mismo cambio:

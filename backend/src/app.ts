@@ -1,12 +1,28 @@
 import cors from 'cors';
 import express, { type Express } from 'express';
+import type { Pool } from 'mysql2/promise';
 import swaggerUi from 'swagger-ui-express';
 import type { AppConfig } from './config/env.js';
+import { createPool } from './db/pool.js';
 import { createOpenApiDocument } from './docs/openapi.js';
 import { errorHandler, notFoundHandler } from './middleware/errorHandler.js';
 import { createApiRouter } from './routes/index.js';
+import { createStorage, type StorageDriver } from './storage/index.js';
 
-export function createApp(config: AppConfig): Express {
+export interface AppDeps {
+  pool: Pool;
+  storage: StorageDriver;
+}
+
+/**
+ * Construye la app. Las dependencias (pool, storage) se pueden inyectar en
+ * pruebas; por defecto se crean a partir de la configuración. Crear el pool no
+ * abre conexiones hasta la primera consulta.
+ */
+export function createApp(config: AppConfig, deps: Partial<AppDeps> = {}): Express {
+  const pool = deps.pool ?? createPool(config);
+  const storage = deps.storage ?? createStorage(config);
+
   const app = express();
 
   const allowedOrigins = config.CORS_ORIGIN.split(',')
@@ -20,7 +36,7 @@ export function createApp(config: AppConfig): Express {
   );
   app.use(express.json({ limit: '1mb' }));
 
-  app.use('/api', createApiRouter());
+  app.use('/api', createApiRouter({ pool, storage }));
 
   const openApiDocument = createOpenApiDocument(
     config.OPENAPI_SERVER_URL ?? `http://localhost:${config.PORT}`,

@@ -1,5 +1,9 @@
 import { OpenAPIRegistry, OpenApiGeneratorV31 } from '@asteasolutions/zod-to-openapi';
-import { errorResponseSchema, healthResponseSchema } from './schemas.js';
+import {
+  errorResponseSchema,
+  healthResponseSchema,
+  perritoIdParamSchema,
+} from './schemas.js';
 
 /**
  * Construye el documento OpenAPI 3.1 a partir de los esquemas Zod.
@@ -16,6 +20,7 @@ export function createOpenApiDocument(serverUrl: string) {
 
   const successSchema = registry.register('HealthResponse', healthResponseSchema);
   const errorSchema = registry.register('ErrorResponse', errorResponseSchema);
+  const idParamSchema = registry.register('PerritoIdParam', perritoIdParamSchema);
 
   registry.registerPath({
     method: 'get',
@@ -30,6 +35,34 @@ export function createOpenApiDocument(serverUrl: string) {
       },
       500: {
         description: 'Error inesperado.',
+        content: { 'application/json': { schema: errorSchema } },
+      },
+    },
+  });
+
+  registry.registerPath({
+    method: 'get',
+    path: '/api/perritos/{id}/foto',
+    tags: ['Perritos'],
+    summary: 'Foto de un perrito',
+    description:
+      'Devuelve la imagen del perrito. El backend resuelve la ubicación y la lee por el storage activo; el cliente nunca ve la carpeta ni el bucket.',
+    request: { params: idParamSchema },
+    responses: {
+      200: {
+        description: 'Imagen del perrito.',
+        content: {
+          'image/jpeg': { schema: { type: 'string', format: 'binary' } },
+          'image/png': { schema: { type: 'string', format: 'binary' } },
+          'image/webp': { schema: { type: 'string', format: 'binary' } },
+        },
+      },
+      400: {
+        description: 'Identificador inválido.',
+        content: { 'application/json': { schema: errorSchema } },
+      },
+      404: {
+        description: 'Perrito o foto no encontrados.',
         content: { 'application/json': { schema: errorSchema } },
       },
     },

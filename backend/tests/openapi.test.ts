@@ -1,29 +1,7 @@
 import request from 'supertest';
 import { describe, expect, it } from 'vitest';
 import { createApp } from '../src/app.js';
-import type { AppConfig } from '../src/config/env.js';
-
-const testConfig: AppConfig = {
-  NODE_ENV: 'test',
-  PORT: 3000,
-  CORS_ORIGIN: 'http://localhost:5173',
-  DB_HOST: '127.0.0.1',
-  DB_PORT: 3306,
-  DB_USER: 'pawfinder',
-  DB_PASSWORD: 'secreto-de-prueba',
-  DB_NAME: 'pawfinder',
-  DB_SSL: false,
-  DB_SSL_CA: undefined,
-  STORAGE_DRIVER: 'local',
-  RUTA_IMAGENES: 'D:/pawfinder-imagenes',
-  IMAGE_MAX_BYTES: 5 * 1024 * 1024,
-  AWS_REGION: undefined,
-  AWS_S3_BUCKET: undefined,
-  AWS_ACCESS_KEY_ID: undefined,
-  AWS_SECRET_ACCESS_KEY: undefined,
-  PUBLIC_BASE_URL: 'http://localhost:3000',
-  OPENAPI_SERVER_URL: 'http://localhost:3000',
-};
+import { testConfig } from './helpers/testConfig.js';
 
 describe('GET /api/openapi.json', () => {
   it('responde 200 con un documento OpenAPI 3.1 que incluye /api/health', async () => {
@@ -34,6 +12,14 @@ describe('GET /api/openapi.json', () => {
     expect(response.body.paths['/api/health']).toBeDefined();
     expect(response.body.info.title).toBeTruthy();
     expect(response.body.components.schemas.HealthResponse).toBeDefined();
+  });
+
+  it('documenta el endpoint de la foto del perrito', async () => {
+    const response = await request(createApp(testConfig)).get('/api/openapi.json');
+    const ruta = response.body.paths['/api/perritos/{id}/foto'];
+
+    expect(ruta).toBeDefined();
+    expect(ruta.get.responses['200']).toBeDefined();
   });
 
   it('usa la URL de servidor configurada', async () => {

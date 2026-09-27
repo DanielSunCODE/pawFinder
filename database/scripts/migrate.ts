@@ -1,55 +1,58 @@
-import fs from 'fs';
-import path from 'path';
-import mysql from 'mysql2/promise';
-import { dbConfig } from '../../src/db/pool';
+import { readdirSync, readFileSync } from 'node:fs';
+import path from 'node:path';
+import { fileURLToPath, pathToFileURL } from 'node:url';
+import { loadDbEnv, type DbConfig } from '../../backend/src/config/env.js';
+import { createScriptConnection } from '../../backend/src/db/pool.js';
+import { cargarEnv } from './loadEnv.js';
 
-const MIGRATIONS_DIR = path.join(__dirname, '..', 'migrations');
+const aqui = path.dirname(fileURLToPath(import.meta.url));
+const MIGRATIONS_DIR = path.resolve(aqui, '..', 'migrations');
 
-async function main() {
-  // Conexión propia (no el pool de la app) con multipleStatements: true,
-  // necesaria para poder correr un archivo .sql con varios CREATE/INSERT
-  // en una sola llamada. Se cierra al terminar.
-  const conn = await mysql.createConnection({ ...dbConfig, multipleStatements: true });
+export async function runMigrations(config: DbConfig): Promise<void> {
+  const conn = await createScriptConnection(config);
 
-  await conn.query(`
-    CREATE TABLE IF NOT EXISTS schema_migrations (
-      nombre_archivo VARCHAR(255) PRIMARY KEY,
-      aplicado_en TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
-    )
-  `);
+  try {
+    await conn.query(`
+      CREATE TABLE IF NOT EXISTS schema_migrations (
+        nombre_archivo VARCHAR(255) PRIMARY KEY,
+        aplicado_en TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
 
-  const [rows] = await conn.query('SELECT nombre_archivo FROM schema_migrations');
-  const aplicadas = new Set((rows as any[]).map((r) => r.nombre_archivo));
+    const [rows] = await conn.query('SELECT nombre_archivo FROM schema_migrations');
+    const aplicadas = new Set(
+      (rows as Array<{ nombre_archivo: string }>).map((r) => r.nombre_archivo),
+    );
 
-  const archivos = fs
-    .readdirSync(MIGRATIONS_DIR)
-    .filter((f) => f.endsWith('.sql'))
-    .sort(); // 001_, 002_, 003_... el orden alfabético = orden de ejecución
+    const archivos = readdirSync(MIGRATIONS_DIR)
+      .filter((f) => f.endsWith('.sql'))
+      .sort();
 
-  for (const archivo of archivos) {
-    if (aplicadas.has(archivo)) {
-      console.log(`⏭  ${archivo} ya estaba aplicada, se omite`);
-      continue;
-    }
-    const sql = fs.readFileSync(path.join(MIGRATIONS_DIR, archivo), 'utf8');
-    try {
+    for (const archivo of archivos) {
+      if (aplicadas.has(archivo)) {
+        console.log(`= ${archivo} ya estaba aplicada, se omite`);
+        continue;
+      }
+      const sql = readFileSync(path.join(MIGRATIONS_DIR, archivo), 'utf8');
       await conn.query(sql);
       await conn.query('INSERT INTO schema_migrations (nombre_archivo) VALUES (?)', [archivo]);
-      console.log(`✅ ${archivo} aplicada`);
-    } catch (err) {
-      console.error(`❌ Error aplicando ${archivo}`);
-      await conn.end();
-      throw err;
+      console.log(`+ ${archivo} aplicada`);
     }
-  }
 
-  console.log('Migraciones completas.');
-  await conn.end();
+    console.log('Migraciones completas.');
+  } finally {
+    await conn.end();
+  }
 }
 
-main()
-  .then(() => process.exit(0))
-  .catch((err) => {
-    console.error(err);
+async function main(): Promise<void> {
+  cargarEnv();
+  await runMigrations(loadDbEnv());
+}
+
+if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
+  main().catch((error) => {
+    console.error(error instanceof Error ? error.message : error);
     process.exit(1);
   });
+}

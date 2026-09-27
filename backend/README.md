@@ -36,9 +36,11 @@ Todas se definen en `backend/.env`. Ver `backend/.env.example` para el listado c
 | `PORT` | `3000` | Puerto del servidor. |
 | `CORS_ORIGIN` | `http://localhost:5173` | Orígenes permitidos, separados por coma. |
 | `DB_HOST` / `DB_PORT` / `DB_USER` / `DB_PASSWORD` / `DB_NAME` | — | Conexión a MySQL. |
-| `DB_SSL` / `DB_SSL_CA` | `false` / — | TLS para Aiven. |
+| `DB_CONNECTION_LIMIT` | `10` | Máximo de conexiones del pool. |
+| `DB_SSL` / `DB_SSL_CA` | `false` / — | TLS para Aiven. `DB_SSL_CA` acepta la ruta a un `.pem` o el PEM pegado entre comillas dobles. |
 | `STORAGE_DRIVER` | `local` | `local` o `s3`. |
 | `RUTA_IMAGENES` | `C:/Users/tu_usuario/pawfinder-imagenes` | Directorio fuera del proyecto (modo local). |
+| `IMAGE_MAX_BYTES` | `5242880` | Tamaño máximo por imagen. |
 | `AWS_*` | — | Credenciales S3 (solo si `STORAGE_DRIVER=s3`). |
 | `PUBLIC_BASE_URL` | `http://localhost:3000` | URL pública del backend. |
 | `OPENAPI_SERVER_URL` | `http://localhost:3000` | URL que Swagger UI muestra como servidor del API. |
@@ -48,10 +50,24 @@ Todas se definen en `backend/.env`. Ver `backend/.env.example` para el listado c
 | Método | Ruta | Descripción |
 |---|---|---|
 | GET | `/api/health` | Estado del servicio. |
+| GET | `/api/perritos/{id}/foto` | Foto del perrito, servida por el backend (nunca expone carpeta ni bucket). |
 | GET | `/api/openapi.json` | Documento OpenAPI 3.1 en JSON. |
 | GET | `/api/docs` | Interfaz Swagger UI para explorar y probar los endpoints. |
 
 `/api/docs` y `/api/openapi.json` están disponibles en todos los entornos (local y producción).
+
+## Base de datos y almacenamiento
+
+La conexión y el storage se configuran por variables de entorno. Desde la raíz:
+
+```bash
+npm run db:migrate   # crea/actualiza el esquema
+npm run db:seed      # carga catálogos y perritos de prueba
+npm run db:reset     # recrea la base local desde cero
+```
+
+El endpoint de fotos lee `ruta_imagen` de la base y la resuelve con el driver
+activo (`local` con `RUTA_IMAGENES`, o `s3`). Ver `../docs/database-schema.md`.
 
 ## Documentación de endpoints
 

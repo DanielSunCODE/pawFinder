@@ -6,10 +6,12 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT_DIR="$(cd "$SCRIPT_DIR/../.." && pwd)"
 
-# Carga variables desde el .env de la raíz del proyecto si existe.
-if [ -f "$ROOT_DIR/.env" ]; then
+# Carga variables desde backend/.env (con .env en la raíz como respaldo).
+ENV_FILE="$ROOT_DIR/backend/.env"
+[ -f "$ENV_FILE" ] || ENV_FILE="$ROOT_DIR/.env"
+if [ -f "$ENV_FILE" ]; then
   set -a
-  source "$ROOT_DIR/.env"
+  source "$ENV_FILE"
   set +a
 fi
 

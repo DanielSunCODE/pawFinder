@@ -18,20 +18,20 @@
 
 ## 3. Database foundation
 
-- [ ] 3.1 Implementar `src/db/pool.ts` con pool `mysql2` que soporte modo local y Aiven con TLS (`DB_SSL`, `DB_SSL_CA`)
-- [ ] 3.2 Escribir migración `001_catalogs.sql` (razas y colores, incluyendo "Sin raza definida / criollo")
-- [ ] 3.3 Escribir migración `002_dogs.sql` (perrito + relación de colores con principal y hasta dos adicionales)
-- [ ] 3.4 Escribir migración `003_idempotency.sql` (clave de idempotencia única en `dogs`)
-- [ ] 3.5 Escribir seeds `001_breeds.sql` (>=10 razas), `002_colors.sql` (>=10 colores) y `003_test_dogs.sql` (>=15 perritos con foto)
-- [ ] 3.6 Implementar `database/scripts` para migrar, sembrar, respaldar y restaurar, y verificar la creación desde cero en una base local
+- [x] 3.1 Implementar `backend/src/db/pool.ts` con pool `mysql2` que soporte modo local y Aiven con TLS (`DB_SSL`, `DB_SSL_CA`)
+- [x] 3.2 Escribir migración `001_catalogs.sql` (razas y colores, incluyendo "Sin raza definida / criollo")
+- [x] 3.3 Escribir migración `002_dogs.sql` (perrito + relación de colores con principal y hasta dos adicionales)
+- [x] 3.4 Escribir migración `003_idempotency.sql` (clave de idempotencia única, tabla `idempotencia` 1:1 con `perros`)
+- [x] 3.5 Escribir seeds `001_breeds.sql` (>=10 razas), `002_colors.sql` (>=10 colores) y `003_test_dogs.sql` (>=15 perritos con foto)
+- [x] 3.6 Implementar `database/scripts` para migrar, sembrar, respaldar y restaurar, y verificar la creación desde cero en una base local
 
 ## 4. Media storage foundation
 
-- [ ] 4.1 Definir la interfaz de storage (`guardar`, `leer`) y el selector por `STORAGE_DRIVER` en `src/storage/index.ts`
-- [ ] 4.2 Implementar el driver `local` usando `RUTA_IMAGENES` fuera del proyecto, creando el directorio si no existe
-- [ ] 4.3 Implementar el driver `s3` con `@aws-sdk/client-s3` sobre bucket privado
-- [ ] 4.4 Implementar la generación de nombre por el backend y la validación de imagen real (JPG/PNG/WEBP) por contenido
-- [ ] 4.5 Dejar listo el endpoint base que sirve las fotos a través del backend (sin exponer carpeta ni bucket)
+- [x] 4.1 Definir la interfaz de storage (`guardar`, `leer`) y el selector por `STORAGE_DRIVER` en `backend/src/storage/index.ts`
+- [x] 4.2 Implementar el driver `local` usando `RUTA_IMAGENES` fuera del proyecto, creando el directorio si no existe
+- [x] 4.3 Implementar el driver `s3` con `@aws-sdk/client-s3` sobre bucket privado
+- [x] 4.4 Implementar la generación de nombre por el backend y la validación de imagen real (JPG/PNG/WEBP) por contenido
+- [x] 4.5 Dejar listo el endpoint base que sirve las fotos a través del backend (sin exponer carpeta ni bucket)
 
 ## 5. Frontend foundation
 
@@ -44,17 +44,17 @@
 
 ## 6. Documentación
 
-- [ ] 6.1 Redactar `README.md` raíz con nombre, integrantes/roles, arquitectura, stack con versiones exactas y estructura de carpetas
-- [ ] 6.2 Agregar al README los pasos de instalación, creación de BD, carga de datos, variables de entorno y comandos de ejecución con URLs
-- [ ] 6.3 Agregar al README cómo probar desde celular en la misma red, lista de endpoints (aunque sea esqueleto) y problemas comunes
-- [ ] 6.4 Agregar las secciones esqueleto de Paradigmas y Despliegue con placeholders marcados para completar por rol
-- [ ] 6.5 Redactar `docs/development.md` (inicio rápido, flujo de ramas y pull requests, convención de commits, reglas de secretos)
-- [ ] 6.6 Redactar `docs/architecture.md` (diagrama, stack y mapeo de paradigmas) y `docs/deployment.md` (borrador de la sección de despliegue)
+- [x] 6.1 Redactar `README.md` raíz con nombre, integrantes/roles, arquitectura, stack con versiones exactas y estructura de carpetas
+- [x] 6.2 Agregar al README los pasos de instalación, creación de BD, carga de datos, variables de entorno y comandos de ejecución con URLs
+- [x] 6.3 Agregar al README cómo probar desde celular en la misma red, lista de endpoints (aunque sea esqueleto) y problemas comunes
+- [x] 6.4 Agregar las secciones esqueleto de Paradigmas y Despliegue con placeholders marcados para completar por rol
+- [x] 6.5 Redactar `docs/development.md` (inicio rápido, flujo de ramas y pull requests, convención de commits, reglas de secretos)
+- [x] 6.6 Redactar `docs/architecture.md` (diagrama, stack y mapeo de paradigmas) y `docs/deployment.md` (borrador de la sección de despliegue)
 
 ## 7. Verificación final
 
-- [ ] 7.1 Ejecutar `npm install` en la raíz y confirmar que no se versionan dependencias ni secretos
-- [ ] 7.2 Levantar backend y frontend y confirmar el endpoint de salud y la carga de la SPA
-- [ ] 7.3 Aplicar migraciones y seeds en una base local limpia y confirmar catálogos y perritos de prueba
-- [ ] 7.4 Ejecutar la suite de pruebas de ambos paquetes
-- [ ] 7.5 Ejecutar `openspec validate bootstrap-project --strict` y confirmar que el cambio es válido
+- [x] 7.1 Ejecutar `npm install` en la raíz y confirmar que no se versionan dependencias ni secretos
+- [x] 7.2 Levantar backend y frontend y confirmar el endpoint de salud y la carga de la SPA
+- [ ] 7.3 Aplicar migraciones y seeds en una base local limpia y confirmar catálogos y perritos de prueba (requiere credenciales de MySQL local; ejecutar `npm run db:reset`)
+- [x] 7.4 Ejecutar la suite de pruebas de ambos paquetes
+- [x] 7.5 Ejecutar `openspec validate bootstrap-project --strict` y confirmar que el cambio es válido

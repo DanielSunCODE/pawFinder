@@ -1,40 +1,247 @@
-# Database & Media Storage foundation
+# PawFinder — Registro de perritos de la calle
 
-Entregable para las tasks **3. Database foundation** y **4. Media storage
-foundation**. Estructura pensada para pegarse directo en la raíz del repo.
+Aplicación para registrar perritos de la calle: quien encuentra uno le toma una
+foto, le pone un nombre, anota cómo es y marca en un mapa dónde lo vio. El
+registro sirve a rescatistas, vecinos y asociaciones para saber qué perros hay,
+cómo identificarlos y en qué zona andan.
 
-## Estructura
+Está pensada **primero para celular** (se usa en la calle) y adaptada a
+computadora. Los lineamientos completos de la consigna y las reglas del proyecto
+están en [`MASTER_PROMPT.md`](./MASTER_PROMPT.md).
+
+## 1. Integrantes y roles
+
+| Integrante | Rol | Responsable de |
+|---|---|---|
+| Daniel Sun | **Backend** | API, validación del servidor, almacenamiento de imágenes, manejo de errores |
+| Remaori | **Frontend** | Pantallas, formulario, cámara/carga de foto, mapa, validaciones del cliente |
+| Aldo Badillo | **DBA** | Modelo de datos, migraciones, catálogos, datos de prueba, respaldo |
+
+## 2. Requisitos previos (versiones)
+
+| Herramienta | Versión | Para qué |
+|---|---|---|
+| Node.js | 22 LTS o superior (desarrollado con **24.14.1**) | backend y frontend |
+| npm | 10 o superior (desarrollado con **11.11.0**) | dependencias y scripts |
+| MySQL | **8.0.46** (o MariaDB 10.6+ compatible) | base de datos local |
+| Git | cualquiera reciente | clonar y versionar |
+
+No se necesita Docker en ningún punto (ver sección 12).
+
+## 3. Instalación
+
+```bash
+# 1. Clonar el repositorio
+git clone <URL-del-repositorio>
+cd pawFinder
+
+# 2. Instalar todas las dependencias (workspaces: backend, frontend, database)
+npm install
+
+# 3. Copiar el archivo de entorno del backend y ajustar valores
+copy backend\.env.example backend\.env     # Windows
+# cp backend/.env.example backend/.env     # Linux / macOS
+```
+
+## 4. Base de datos: creación, catálogos y datos de prueba
+
+Con `backend/.env` configurado (host, usuario, contraseña, `DB_NAME`):
+
+```bash
+# Aplica las migraciones (crea tablas y catálogos base). Idempotente.
+npm run db:migrate
+
+# Carga razas, colores y 15+ perritos de prueba con foto.
+npm run db:seed
+
+# Alternativa: recrear la base local desde cero (DROP + CREATE + migrate + seed)
+npm run db:reset
+```
+
+- Catálogos: **26 razas** (incluye "Sin raza definida / Criollo"), **12 colores**,
+  6 colores de ojos y 18 patrones de pelaje.
+- **16 perritos de prueba**; `db:seed` genera además una foto PNG válida por
+  perrito dentro de `RUTA_IMAGENES`.
+- Detalle del modelo y diagrama ER: [`docs/database-schema.md`](./docs/database-schema.md).
+
+## 5. Configuración (variables de entorno)
+
+Todas se definen en **`backend/.env`** (copiado de `backend/.env.example`). El
+frontend usa `frontend/.env.local` (copiado de `frontend/.env.example`).
+
+### Backend (`backend/.env`)
+
+| Variable | Ejemplo | Descripción |
+|---|---|---|
+| `NODE_ENV` | `development` | `development`, `test` o `production`. |
+| `PORT` | `3000` | Puerto del API. |
+| `CORS_ORIGIN` | `http://localhost:5173` | Orígenes permitidos (separados por coma). |
+| `DB_HOST` | `localhost` | Host de MySQL (local o Aiven). |
+| `DB_PORT` | `3306` | Puerto de MySQL. |
+| `DB_USER` | `root` | Usuario. |
+| `DB_PASSWORD` | *(vacío)* | Contraseña. |
+| `DB_NAME` | `pawfinder` | Nombre de la base. |
+| `DB_CONNECTION_LIMIT` | `10` | Máximo de conexiones del pool. |
+| `DB_SSL` | `false` | `true` para Aiven. |
+| `DB_SSL_CA` | *(vacío)* | Ruta a un `.pem` **o** el PEM pegado entre comillas dobles. |
+| `STORAGE_DRIVER` | `local` | `local` o `s3`. |
+| `RUTA_IMAGENES` | `C:/Users/tu_usuario/pawfinder-imagenes` | Carpeta **fuera del proyecto** (modo local). |
+| `IMAGE_MAX_BYTES` | `5242880` | Tamaño máximo por imagen. |
+| `AWS_REGION` / `AWS_S3_BUCKET` / `AWS_ACCESS_KEY_ID` / `AWS_SECRET_ACCESS_KEY` | — | Solo si `STORAGE_DRIVER=s3`. |
+| `PUBLIC_BASE_URL` | `http://localhost:3000` | URL pública del API. |
+| `OPENAPI_SERVER_URL` | `http://localhost:3000` | URL que muestra Swagger UI. |
+
+> El `.env` real nunca se sube al repositorio. La **CA de Aiven es pública**, pero
+> un PEM pegado en `.env` debe ir **entre comillas dobles**; si no, solo se lee la
+> primera línea.
+
+### Frontend (`frontend/.env.local`)
+
+| Variable | Ejemplo | Descripción |
+|---|---|---|
+| `VITE_API_URL` | `/api` | URL base del API vista por el navegador (proxy de Vite en dev). |
+| `BACKEND_URL` | `http://localhost:3000` | Destino del proxy de Vite (solo lo lee `vite.config.ts`). |
+| `VITE_USAR_MOCKS` | `false` | `true` = datos de prueba en memoria, sin backend. |
+| `VITE_MAPA_CENTRO` | `19.4326,-99.1332` | Centro inicial del mapa. |
+| `VITE_MAPA_ZOOM` | `13` | Zoom inicial. |
+| `VITE_MAPA_MOSAICOS_URL` | *(vacío)* | Proveedor de mapas alternativo; vacío = OpenStreetMap (sin llave). |
+
+## 6. Ejecución
+
+```bash
+# Backend (terminal 1)  →  http://localhost:3000   (docs en /api/docs)
+npm run dev:backend
+
+# Frontend (terminal 2) →  http://localhost:5173
+npm run dev:frontend
+```
+
+- API: `http://localhost:3000`
+- Documentación interactiva (Swagger UI): `http://localhost:3000/api/docs`
+- OpenAPI JSON: `http://localhost:3000/api/openapi.json`
+- App web: `http://localhost:5173`
+
+## 7. Probar desde un celular en la misma red
+
+Los navegadores solo dan **cámara y ubicación** en `https` o `localhost`. Desde
+el celular no es `localhost`, así que hay un modo con HTTPS:
+
+```bash
+# Levanta el frontend con HTTPS accesible en la red local (modo "red")
+npm run dev:red --workspace @pawfinder/frontend
+```
+
+1. La terminal muestra una URL tipo `https://192.168.1.50:5173/`. Ábrela en el
+   celular (celular y computadora en la **misma red Wi-Fi**).
+2. Acepta la advertencia del certificado autofirmado.
+3. Si no carga, permite a Node.js en el firewall (redes privadas).
+4. El backend puede seguir en `localhost` de la computadora: el celular solo
+   habla con Vite y Vite reenvía `/api` al backend.
+
+## 8. Endpoints de la API
+
+| Método | Ruta | Estado | Descripción |
+|---|---|---|---|
+| GET | `/api/health` | ✅ | Estado del servicio. |
+| GET | `/api/perritos/{id}/foto` | ✅ | Foto del perrito servida por el backend (no expone carpeta ni bucket). |
+| GET | `/api/openapi.json` | ✅ | Documento OpenAPI 3.1 en JSON. |
+| GET | `/api/docs` | ✅ | Interfaz Swagger UI. |
+| GET | `/api/perritos` | ⏳ | Listar/filtrar perritos (filtros por búsqueda y color). |
+| GET | `/api/perritos/{id}` | ⏳ | Detalle de un perrito. |
+| POST | `/api/perritos` | ⏳ | Registrar perrito (multipart: `datos` + `foto`, header `Idempotency-Key`). |
+| GET | `/api/razas` | ⏳ | Catálogo de razas. |
+| GET | `/api/colores` | ⏳ | Catálogo de colores. |
+
+✅ implementado · ⏳ planeado (los consume el frontend; el contrato se documenta en
+Swagger conforme se implementan, ver `backend/AGENTS.md`).
+
+## 9. Capturas de pantalla
+
+> _Pendiente: agregar capturas desde celular del mapa, la lista, el detalle y el
+> formulario (con cámara, pin y errores de validación)._
+
+## 10. Problemas comunes
+
+| Síntoma | Causa / solución |
+|---|---|
+| `Configuracion de entorno invalida o incompleta: DB_USER` | Falta definir variables en `backend/.env`. |
+| `Access denied for user ...` | Usuario/contraseña de MySQL incorrectos en `backend/.env`. |
+| `DB_SSL=true requiere DB_SSL_CA` | Define `DB_SSL_CA` (ruta o PEM entre comillas). |
+| Error de conexión TLS con Aiven | El PEM quedó truncado: envuélvelo en comillas dobles o usa una ruta. |
+| `RUTA_IMAGENES es obligatoria` | Define `RUTA_IMAGENES` con una carpeta fuera del proyecto. |
+| "No pudimos conectar con el servidor" (frontend) | El backend no está corriendo o `BACKEND_URL` está mal. |
+| La ubicación/cámara no funciona en el celular | Abre la app por HTTPS (`npm run dev:red`), no por `http://IP`. |
+| El mapa se ve gris | Sin internet o la red bloquea `tile.openstreetmap.org`. |
+| `db:seed` falla por `ruta_imagen` duplicada | Ya se sembró: usa `npm run db:reset`. |
+| `db:reset` se cancela | `DB_HOST` no es local; es una protección para no tocar Aiven. |
+
+## 11. Paradigmas
+
+El proyecto mezcla a propósito varios paradigmas. La ubicación concreta del
+código está en [`docs/architecture.md`](./docs/architecture.md); el resumen:
+
+- **Declarativo** — SQL en `database/migrations/` y `database/seeds/`, y las
+  consultas del API (`backend/src/routes/photos.ts`), además de la interfaz
+  (HTML/CSS + JSX que describen *qué* se ve). El filtrado, ordenamiento y
+  agregación viven en SQL; **no** se traen todos los registros para filtrarlos
+  con un ciclo.
+- **Imperativo** — arranque y orquestación en `backend/src/app.ts` y
+  `backend/src/index.ts`; manejadores de eventos y efectos en el frontend.
+- **Orientado a objetos** — la abstracción `StorageDriver` con sus drivers
+  (`backend/src/storage/`), la clase `ErrorApi` (`frontend/src/api/errores.ts`) y
+  los componentes y la clase `HttpError` del backend (`backend/src/middleware/errorHandler.ts`).
+- **Funcional** — la construcción de la query string en
+  `frontend/src/api/http.ts` (`Object.entries(...).filter(...).map(...)`), que
+  **no muta** la entrada y **no usa ciclos explícitos**; y los mapeos de datos del
+  frontend. Se ampliará en el cambio de dominio (mappers de perritos).
+
+### Idempotencia del registro
+
+Diseño (el endpoint de registro se implementa en el cambio de dominio):
+
+- El formulario **genera una clave de idempotencia (UUID) al abrirse** y la envía
+  en el encabezado `Idempotency-Key`.
+- La tabla **`idempotencia`** (`database/migrations/003_idempotency.sql`) guarda
+  `idempotency_key` como clave primaria → `id_perro`.
+- Ante un doble envío, el backend **devuelve el mismo `id` y el mismo resultado**
+  (no crea otro perrito y **no** responde "error: duplicado").
+- La prueba del doble envío se agregará junto con el endpoint.
+
+## 12. Despliegue (punto extra)
+
+Detalle completo en [`docs/deployment.md`](./docs/deployment.md). Resumen:
+
+- **Dónde corre cada pieza:** app web en **Vercel**, API en **Render**, MySQL en
+  **Aiven**, imágenes en **AWS S3** (bucket privado). Las imágenes **no** viven
+  junto al código.
+- **HTTPS:** Vercel y Render entregan HTTPS y dominio automáticamente (necesario
+  para cámara y ubicación).
+- **Local vs producción:** mismas variables, distintos valores (`DB_*` hacia
+  Aiven con `DB_SSL=true`, `STORAGE_DRIVER=s3`, `CORS_ORIGIN` con el dominio del
+  frontend, `PUBLIC_BASE_URL`/`OPENAPI_SERVER_URL` con la URL de Render). Las
+  contraseñas se guardan en el panel de variables de cada servicio, nunca en el repo.
+- **Puertos:** solo el 443/80 de los servicios públicos; **la base de datos no se
+  expone** a internet.
+- **Respaldos:** `mysqldump` para la base y copia del bucket/`RUTA_IMAGENES` para
+  las imágenes (ver `docs/deployment.md`).
+- **Sin Docker:** si se auto-hospeda, instalación directa con un servicio
+  (`systemd`) y un proxy inverso (nginx/Caddy) al frente.
+- **URL pública:** _pendiente_ (se agrega aquí al publicar).
+
+## 13. Estructura del repositorio
 
 ```
-src/db/pool.ts                 → 3.1
-database/migrations/           → 3.2, 3.3, 3.4
-database/seeds/                → 3.5
-database/scripts/               → 3.6
-database/full_reconstruction.sql → conveniencia (ver docs/database-schema.md)
-src/storage/                    → 4.1, 4.2, 4.3, 4.4, 4.5
-docs/database-schema.md         → diagrama ER + documentación de tablas y reglas
-docs/openapi.yaml                → contrato del endpoint de fotos
-.env.example                     → todas las variables de entorno necesarias
+frontend/   App web (React + Vite + TypeScript). Ver frontend/README.md
+backend/    API REST (Node + Express + TypeScript). Ver backend/README.md
+database/   Migraciones, seeds y scripts SQL
+docs/       Arquitectura, esquema de BD y despliegue
+openspec/   Especificaciones y cambios (spec-driven)
 ```
 
-## Checklist
+## 14. Pruebas
 
-- [x] 3.1 `src/db/pool.ts` — pool `mysql2` con soporte local/Aiven vía `DB_SSL` + `DB_SSL_CA`
-- [x] 3.2 `001_catalogs.sql` — razas y colores, incluye `Sin raza definida / Criollo`
-- [x] 3.3 `002_dogs.sql` — perrito + relación de colores (principal + hasta 2 adicionales)
-- [x] 3.4 `003_idempotency.sql` — clave de idempotencia (⚠️ ver nota de diseño en `docs/database-schema.md`)
-- [x] 3.5 Seeds: 26 razas, 12 colores, 16 perritos de prueba con foto
-- [x] 3.6 `database/scripts/` (migrate, seed, backup, restore, reset-local) — probado de punta a punta contra MariaDB local
-- [x] 4.1 Interfaz de storage (`guardar`/`leer`) + selector por `STORAGE_DRIVER`
-- [x] 4.2 Driver `local` con `RUTA_IMAGENES` fuera del proyecto
-- [x] 4.3 Driver `s3` con `@aws-sdk/client-s3`, bucket privado
-- [x] 4.4 Generación de nombre por el backend + validación de imagen real (magic bytes)
-- [x] 4.5 Endpoint base que sirve fotos sin exponer carpeta/bucket (ejemplo Express para Daniel)
-
-## Antes de hacer push
-
-1. Instala dependencias y agrega los scripts npm — ver `database/scripts/README.md`.
-2. Copia `.env.example` a `.env` y llénalo (no subas `.env` ni el `ca.pem` de Aiven al repo).
-3. Corre `npm run db:reset` contra MySQL local para confirmar que todo el pipeline funciona desde cero.
-4. Avisa a Daniel sobre la nota de diseño de `idempotencia` (tabla separada vs. columna en `perros`) antes de que empiece a integrar `POST /perros`.
-5. Pásale `docs/openapi.yaml` a quien mantenga el spec completo del backend, para que lo mergee con el resto de endpoints.
+```bash
+npm run test:backend          # suite del backend (Vitest + Supertest)
+npm run db:typecheck          # tipos de los scripts de base de datos
+# Desde frontend/: npm test   # suite del frontend
+```

@@ -12,6 +12,10 @@ coverage/
 .env.*
 !.env.example
 
+# Certificados (p. ej. la CA de Aiven)
+backend/certs/
+*.pem
+
 # Logs
 *.log
 npm-debug.log*
@@ -25,3 +29,6 @@ Thumbs.db
 # Imagenes de prueba pesadas (el almacenamiento real vive fuera del proyecto)
 database/seeds/assets/*
 !database/seeds/assets/.gitkeep
+
+# Respaldos de base de datos generados localmente
+database/backups/

@@ -12,12 +12,12 @@ CREATE TABLE IF NOT EXISTS perros (
     nombre              VARCHAR(60) NOT NULL,
 
     id_raza             INT NOT NULL,
-    sexo                VARCHAR(6) NOT NULL,
-    id_patron           INT NOT NULL,
-    id_color_ojo        INT NOT NULL,
-    longitud_pelaje     VARCHAR(10) NOT NULL,
-    tamano              VARCHAR(10) NOT NULL,
-    etapa_vida          VARCHAR(10) NOT NULL,
+    sexo                VARCHAR(6) NULL,
+    id_patron           INT NULL,
+    id_color_ojo        INT NULL,
+    longitud_pelaje     VARCHAR(10) NULL,
+    tamano              VARCHAR(10) NULL,
+    etapa_vida          VARCHAR(10) NULL,
     marcas_distintivas  VARCHAR(500) NULL,
 
     -- Ubicación donde se encontró al perrito (obligatoria).

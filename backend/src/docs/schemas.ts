@@ -39,3 +39,11 @@ export const healthResponseSchema = z
     data: healthDataSchema,
   })
   .openapi('HealthResponse');
+
+/** Parámetro de ruta con el identificador de un perrito. */
+export const perritoIdParamSchema = z
+  .object({
+    id: z.coerce.number().int().positive().openapi({ example: 1 }),
+  })
+  .openapi('PerritoIdParam');
+

@@ -77,8 +77,17 @@ Entidad principal. Reglas de negocio aplicadas por `CHECK`:
 | `chk_etapa` | `'cachorro'`, `'adulto'` o `'senior'` |
 | `chk_latitud` / `chk_longitud` | Rango geográfico válido (-90/90, -180/180) |
 
-`ruta_imagen` es `UNIQUE` y es la clave que usa `src/storage` (no una URL
-pública) para localizar el archivo en el driver activo (local o S3).
+Solo `nombre`, `id_raza`, `latitud`, `longitud` y `ruta_imagen` son
+obligatorios. `sexo`, `id_patron`, `id_color_ojo`, `longitud_pelaje`, `tamano`
+y `etapa_vida` son información adicional **opcional** (nullable): no pertenecen
+a los campos obligatorios de la consigna y el registro mínimo funciona sin
+ellos. La raza "Sin raza definida / Criollo" cubre el caso de raza no
+identificada.
+
+`ruta_imagen` es `UNIQUE` y es la clave que usa el storage del backend
+(`backend/src/storage`, no una URL pública) para localizar el archivo en el
+driver activo (local o S3). La imagen se sirve por el endpoint
+`GET /api/perritos/{id}/foto`.
 
 ### `perro_colores`
 Relación N:M entre `perros` y `colores`, con `es_dominante` marcando el color
@@ -88,13 +97,15 @@ backend, no en la base): exactamente un `es_dominante = 1` por perrito, de 0 a
 principal entre los adicionales.
 
 ### `idempotencia`
-Soporte de idempotencia para `POST /perros`: guarda qué `idempotency_key` ya
-generó qué `id_perro`, para que un reintento de red no duplique el registro.
+Soporte de idempotencia para el registro de perritos: guarda qué
+`idempotency_key` (UUID que genera el formulario al abrirse) ya generó qué
+`id_perro`, para que un reintento de red o un doble clic no duplique el
+registro. La clave es la PK, así que la base rechaza cualquier duplicado.
 
-> **Nota de diseño:** la task original pedía "clave de idempotencia única en
-> `dogs`", lo que sugiere una columna en la tabla principal. Aquí se
-> implementó como tabla separada (equivalente, más normalizada). Confirmar
-> con el equipo de backend antes de construir lógica que asuma una u otra.
+> **Decisión:** la task mencionaba "clave de idempotencia única en `dogs`".
+> Se implementó como tabla separada 1:1 (más normalizada) en lugar de una
+> columna en `perros`. El endpoint de registro debe consultar/insertar aquí
+> y devolver el mismo `id_perro` ante una clave repetida.
 
 ### `schema_migrations`
 Tabla de control usada por `database/scripts/migrate.ts` para no reaplicar
@@ -106,13 +117,18 @@ migraciones ya corridas. No es parte del modelo de negocio.
 |---|---|
 | `database/migrations/00X_*.sql` | Fuente de verdad del esquema, versionada y aplicada una por una vía `npm run db:migrate` |
 | `database/seeds/00X_*.sql` | Datos de catálogo extendido y perritos de prueba, vía `npm run db:seed` |
-| `database/full_reconstruction.sql` | Copia de conveniencia: migraciones + seeds en un solo archivo, para levantar una base local completa con un solo `mysql < archivo.sql`, sin depender de Node. **No es la fuente de verdad**: si cambian las migraciones o seeds, hay que regenerar este archivo. |
-| `database/scripts/` | `migrate.ts`, `seed.ts`, `backup.sh`, `restore.sh`, `reset-local.sh` — ver `database/scripts/README.md` |
+| `database/scripts/` | `migrate.ts`, `seed.ts`, `reset-local.ts`, `backup.sh`, `restore.sh` — ver `database/scripts/README.md` |
+
+Para levantar una base local completa desde cero: `npm run db:reset` (drop,
+create, migrate y seed). Es la única ruta soportada; no hay archivo único de
+reconstrucción que pueda desincronizarse.
 
 ## Validación
 
-`full_reconstruction.sql` fue probado de punta a punta contra un MySQL/MariaDB
-limpio: crea las 8 tablas, carga 26 razas, 12 colores, 6 colores de ojos, 18
-patrones, 16 perritos de prueba con sus colores, y las restricciones
-(`chk_nombre`, `chk_latitud`, `chk_longitud`, FKs) rechazan correctamente
-datos inválidos.
+Las migraciones y seeds fueron probados de punta a punta contra un
+MySQL/MariaDB limpio: crean las tablas, cargan 26 razas, 12 colores, 6 colores
+de ojos, 18 patrones y 16 perritos de prueba con sus colores, y las
+restricciones (`chk_nombre`, `chk_latitud`, `chk_longitud`, FKs) rechazan datos
+inválidos. `db:seed` genera además una foto PNG válida por cada perrito de
+prueba dentro de `RUTA_IMAGENES` (modo local), para cumplir "con foto" sin
+versionar archivos pesados.

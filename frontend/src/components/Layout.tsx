@@ -25,7 +25,9 @@ export function Layout() {
   const esFormulario = pathname === '/registrar'
 
   // Al cambiar de pantalla, empezar desde arriba.
-  useEffect(() => window.scrollTo(0, 0), [pathname])
+  useEffect(() => {
+    window.scrollTo(0, 0)
+  }, [pathname])
 
   return (
     <div className="min-h-dvh">

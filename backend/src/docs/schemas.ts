@@ -64,15 +64,29 @@ export const colorSchema = z
   })
   .openapi('Color');
 
+export const patronPelajeSchema = z
+  .object({
+    id: z.number().int().positive().openapi({ example: 2 }),
+    nombre: z.string().openapi({ example: 'Bicolor' }),
+  })
+  .openapi('PatronPelaje');
+
 export const perritoSchema = z
   .object({
     id: z.number().int().positive().openapi({ example: 42 }),
     nombre: z.string().openapi({ example: 'Luna' }),
     fotoUrl: z.string().openapi({ example: 'http://localhost:3000/api/perritos/42/foto' }),
     miniaturaUrl: z.string().openapi({ example: 'http://localhost:3000/api/perritos/42/foto' }),
-    raza: razaSchema.nullable(),
+    raza: razaSchema,
     colorPrincipal: colorSchema,
     coloresAdicionales: z.array(colorSchema).max(2),
+    sexo: z.string().openapi({ example: 'hembra' }),
+    etapaVida: z.string().openapi({ example: 'adulto' }),
+    tamano: z.string().openapi({ example: 'mediano' }),
+    longitudPelaje: z.string().openapi({ example: 'corto' }),
+    patronPelaje: patronPelajeSchema,
+    colorOjos: colorSchema,
+    marcasDistintivas: z.string().nullable().openapi({ example: 'Mancha blanca en el pecho' }),
     latitud: z.number().openapi({ example: 25.686614 }),
     longitud: z.number().openapi({ example: -100.313812 }),
     fechaRegistro: z.string().openapi({ example: '2026-09-26T18:40:00.000Z' }),
@@ -92,6 +106,14 @@ export const razasResponseSchema = z
 export const coloresResponseSchema = z
   .object({ data: z.array(colorSchema) })
   .openapi('ColoresResponse');
+
+export const coloresOjosResponseSchema = z
+  .object({ data: z.array(colorSchema) })
+  .openapi('ColoresOjosResponse');
+
+export const patronesPelajeResponseSchema = z
+  .object({ data: z.array(patronPelajeSchema) })
+  .openapi('PatronesPelajeResponse');
 
 export const conteoColorSchema = z
   .object({
@@ -114,9 +136,10 @@ export const estadisticasResponseSchema = z
 export const subidaPerritoSchema = z
   .object({
     nombre: z.string().openapi({ example: 'Luna', description: 'Texto no vacío.' }),
-    razaId: z.coerce.number().int().positive().optional().openapi({
+    razaId: z.coerce.number().int().positive().openapi({
       example: 2,
-      description: 'Omitir si no se conoce la raza ("Sin raza definida / Criollo" es una raza más del catálogo).',
+      description:
+        'Obligatorio. Si no se conoce la raza, elegir "Sin raza definida / Criollo" del catálogo.',
     }),
     colorPrincipalId: z.coerce.number().int().positive().openapi({ example: 1 }),
     coloresAdicionalesIds: z
@@ -127,6 +150,17 @@ export const subidaPerritoSchema = z
         example: [10],
         description: 'De 0 a 2 colores, sin repetir el principal. Envío repetido del mismo campo.',
       }),
+    sexo: z.enum(['macho', 'hembra']).openapi({ example: 'hembra' }),
+    etapaVida: z.enum(['cachorro', 'adulto', 'senior']).openapi({ example: 'adulto' }),
+    tamano: z
+      .enum(['pequeño', 'mediano', 'grande', 'gigante'])
+      .openapi({ example: 'mediano' }),
+    longitudPelaje: z
+      .enum(['corto', 'mediano', 'largo'])
+      .openapi({ example: 'corto' }),
+    patronPelajeId: z.coerce.number().int().positive().openapi({ example: 2 }),
+    colorOjosId: z.coerce.number().int().positive().openapi({ example: 3 }),
+    marcasDistintivas: z.string().max(500).optional().openapi({ example: 'Mancha blanca en el pecho' }),
     latitud: z.coerce.number().openapi({ example: 25.686614 }),
     longitud: z.coerce.number().openapi({ example: -100.313812 }),
     foto: z.string().openapi({ type: 'string', format: 'binary' }),

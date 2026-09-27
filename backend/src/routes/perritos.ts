@@ -31,6 +31,12 @@ function aNumeroOpcional(valor: unknown): number | undefined {
   return Number(valor);
 }
 
+function aTextoOpcional(valor: unknown): string | null {
+  if (valor === undefined || valor === null) return null;
+  const texto = String(valor).trim();
+  return texto === '' ? null : texto;
+}
+
 function aArrayDeIds(valor: unknown): number[] {
   if (valor === undefined || valor === null || valor === '') return [];
   const bruto = Array.isArray(valor) ? valor : String(valor).split(',');
@@ -57,6 +63,13 @@ function leerDatosDelCuerpo(body: Record<string, unknown>): unknown {
   return {
     nombre: body.nombre,
     razaId: aNumeroOpcional(body.razaId) ?? null,
+    sexo: aTextoOpcional(body.sexo),
+    etapaVida: aTextoOpcional(body.etapaVida),
+    tamano: aTextoOpcional(body.tamano),
+    longitudPelaje: aTextoOpcional(body.longitudPelaje),
+    patronPelajeId: aNumeroOpcional(body.patronPelajeId) ?? null,
+    colorOjosId: aNumeroOpcional(body.colorOjosId) ?? null,
+    marcasDistintivas: aTextoOpcional(body.marcasDistintivas),
     colorPrincipalId: aNumeroOpcional(body.colorPrincipalId),
     coloresAdicionalesIds: aArrayDeIds(body.coloresAdicionalesIds),
     latitud: aNumeroOpcional(body.latitud),
@@ -200,6 +213,23 @@ export function createPerritosRouter(deps: PerritosDeps): Router {
     try {
       const colores = await deps.repository.listarColores();
       res.status(200).json({ data: colores.map((color) => ({ ...color, hex: null })) });
+    } catch (error) {
+      next(error);
+    }
+  });
+
+  router.get('/colores-ojos', async (_req, res, next) => {
+    try {
+      const colores = await deps.repository.listarColoresOjos();
+      res.status(200).json({ data: colores.map((color) => ({ ...color, hex: null })) });
+    } catch (error) {
+      next(error);
+    }
+  });
+
+  router.get('/patrones-pelaje', async (_req, res, next) => {
+    try {
+      res.status(200).json({ data: await deps.repository.listarPatronesPelaje() });
     } catch (error) {
       next(error);
     }

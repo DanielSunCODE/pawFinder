@@ -1,16 +1,33 @@
 // Detalle de un registro: foto grande, datos y dónde se vio en el mapa.
-import { ArrowLeft, CircleCheck, ExternalLink } from 'lucide-react'
+import { ArrowLeft, CircleCheck, MapPin, Navigation } from 'lucide-react'
 import { Marker } from 'react-leaflet'
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router'
-import { api, ErrorApi } from '../api'
+import { api, ErrorApi, type Perrito } from '../api'
 import { mensajePorEstado } from '../api/errores'
-import { EtiquetasColores } from '../components/Colores'
+import { EtiquetasColores, Muestra } from '../components/Colores'
 import { Cargando, MensajeError } from '../components/Estado'
 import { MapaBase } from '../components/mapa/MapaBase'
 import { iconoUbicacion } from '../components/mapa/iconos'
 import { useAsync } from '../hooks/useAsync'
 import { formatearCoordenadas, formatearFecha, tiempoRelativo } from '../utils/formato'
+import { OPCIONES_ETAPA, OPCIONES_PELAJE, OPCIONES_SEXO, OPCIONES_TAMANO, etiquetaDe } from '../utils/opciones'
 import { coloresDe } from '../utils/transformaciones'
+
+/**
+ * Pares [título, valor] de las características que sí se conocen.
+ * Las que quedaron en "No sé" (null) no se muestran.
+ */
+function caracteristicasDe(perrito: Perrito): [string, string][] {
+  const pares: [string, string | null][] = [
+    ['Raza', perrito.raza?.nombre ?? null],
+    ['Sexo', etiquetaDe(OPCIONES_SEXO, perrito.sexo)],
+    ['Edad', etiquetaDe(OPCIONES_ETAPA, perrito.etapaVida)],
+    ['Tamaño', etiquetaDe(OPCIONES_TAMANO, perrito.tamano)],
+    ['Pelo', etiquetaDe(OPCIONES_PELAJE, perrito.longitudPelaje)],
+    ['Patrón', perrito.patronPelaje?.nombre ?? null],
+  ]
+  return pares.filter((par): par is [string, string] => par[1] !== null)
+}
 
 export function DetallePage() {
   const { id } = useParams()
@@ -58,25 +75,41 @@ export function DetallePage() {
             <div className="flex min-w-0 flex-col gap-4.5">
               <h1 className="text-[2rem] font-black">{perrito.nombre}</h1>
 
-              <dl className="grid gap-3.5 rounded-tarjeta bg-superficie p-4.5 shadow-suave [&_dd]:font-bold [&_dt]:mb-1 [&_dt]:text-xs [&_dt]:font-extrabold [&_dt]:tracking-wider [&_dt]:text-texto-suave [&_dt]:uppercase">
-                <div>
-                  <dt>Raza</dt>
-                  <dd>{perrito.raza?.nombre ?? 'Sin especificar'}</dd>
-                </div>
-                <div>
+              <dl className="grid grid-cols-2 gap-3.5 rounded-tarjeta bg-superficie p-4.5 shadow-suave [&_dd]:font-bold [&_dt]:mb-1 [&_dt]:text-xs [&_dt]:font-extrabold [&_dt]:tracking-wider [&_dt]:text-texto-suave [&_dt]:uppercase">
+                {caracteristicasDe(perrito).map(([titulo, valor]) => (
+                  <div key={titulo}>
+                    <dt>{titulo}</dt>
+                    <dd>{valor}</dd>
+                  </div>
+                ))}
+                {perrito.colorOjos && (
+                  <div>
+                    <dt>Ojos</dt>
+                    <dd className="inline-flex items-center gap-1.5">
+                      <Muestra hex={perrito.colorOjos.hex} /> {perrito.colorOjos.nombre}
+                    </dd>
+                  </div>
+                )}
+                <div className="col-span-2">
                   <dt>Colores</dt>
                   <dd>
                     <EtiquetasColores colores={coloresDe(perrito)} marcarPrincipal />
                   </dd>
                 </div>
-                <div>
+                {perrito.marcasDistintivas && (
+                  <div className="col-span-2">
+                    <dt>Marcas distintivas</dt>
+                    <dd className="font-semibold! whitespace-pre-line">{perrito.marcasDistintivas}</dd>
+                  </div>
+                )}
+                <div className="col-span-2">
                   <dt>Registrado</dt>
                   <dd>
                     <time dateTime={perrito.fechaRegistro}>{formatearFecha(perrito.fechaRegistro)}</time>
                     <span className="font-semibold text-texto-suave"> · {tiempoRelativo(perrito.fechaRegistro)}</span>
                   </dd>
                 </div>
-                <div>
+                <div className="col-span-2">
                   <dt>Dónde se vio</dt>
                   <dd className="font-semibold text-texto-suave">{formatearCoordenadas(perrito.latitud, perrito.longitud)}</dd>
                 </div>
@@ -93,17 +126,19 @@ export function DetallePage() {
               </MapaBase>
 
               <div className="flex flex-wrap gap-2.5 [&>*]:flex-[1_1_180px]">
+                {/* Abre nuestro mapa enfocado en este perrito, con su globo abierto. */}
+                <Link to={`/?perrito=${perrito.id}`} className="boton boton--primario">
+                  <MapPin size={18} aria-hidden="true" /> Ver en el mapa
+                </Link>
+                {/* En el celular abre la app de mapas con la ruta; en la computadora, la versión web. */}
                 <a
                   className="boton boton--secundario"
-                  href={`https://www.google.com/maps/search/?api=1&query=${perrito.latitud},${perrito.longitud}`}
+                  href={`https://www.google.com/maps/dir/?api=1&destination=${perrito.latitud},${perrito.longitud}`}
                   target="_blank"
                   rel="noopener noreferrer"
                 >
-                  Abrir en mapas <ExternalLink size={16} aria-hidden="true" />
+                  <Navigation size={18} aria-hidden="true" /> Cómo llegar
                 </a>
-                <Link to="/" className="boton boton--secundario">
-                  Ver todos en el mapa
-                </Link>
               </div>
             </div>
           </article>

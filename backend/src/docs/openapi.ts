@@ -1,6 +1,7 @@
 import { OpenAPIRegistry, OpenApiGeneratorV31 } from '@asteasolutions/zod-to-openapi';
 import { filtrosPerritosSchema } from '../schemas/perrito.js';
 import {
+  coloresOjosResponseSchema,
   coloresResponseSchema,
   colorSchema,
   conteoColorSchema,
@@ -8,6 +9,8 @@ import {
   estadisticasResponseSchema,
   healthResponseSchema,
   idempotencyHeaderSchema,
+  patronPelajeSchema,
+  patronesPelajeResponseSchema,
   perritoIdParamSchema,
   perritoResponseSchema,
   perritoSchema,
@@ -45,6 +48,12 @@ export function createOpenApiDocument(serverUrl: string) {
   const perritosResp = registry.register('PerritosResponse', perritosResponseSchema);
   const razasResp = registry.register('RazasResponse', razasResponseSchema);
   const coloresResp = registry.register('ColoresResponse', coloresResponseSchema);
+  const coloresOjosResp = registry.register('ColoresOjosResponse', coloresOjosResponseSchema);
+  registry.register('PatronPelaje', patronPelajeSchema);
+  const patronesPelajeResp = registry.register(
+    'PatronesPelajeResponse',
+    patronesPelajeResponseSchema,
+  );
   registry.register('ConteoColor', conteoColorSchema);
   const estadisticasResp = registry.register('EstadisticasResponse', estadisticasResponseSchema);
   const subida = registry.register('SubidaPerrito', subidaPerritoSchema);
@@ -166,6 +175,34 @@ export function createOpenApiDocument(serverUrl: string) {
       200: {
         description: 'Colores disponibles.',
         content: { 'application/json': { schema: coloresResp } },
+      },
+      500: respuestaError('Error inesperado.'),
+    },
+  });
+
+  registry.registerPath({
+    method: 'get',
+    path: '/api/colores-ojos',
+    tags: ['Catálogos'],
+    summary: 'Catálogo de colores de ojos',
+    responses: {
+      200: {
+        description: 'Colores de ojos disponibles.',
+        content: { 'application/json': { schema: coloresOjosResp } },
+      },
+      500: respuestaError('Error inesperado.'),
+    },
+  });
+
+  registry.registerPath({
+    method: 'get',
+    path: '/api/patrones-pelaje',
+    tags: ['Catálogos'],
+    summary: 'Catálogo de patrones de pelaje',
+    responses: {
+      200: {
+        description: 'Patrones de pelaje disponibles.',
+        content: { 'application/json': { schema: patronesPelajeResp } },
       },
       500: respuestaError('Error inesperado.'),
     },

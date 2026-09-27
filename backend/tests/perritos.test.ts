@@ -13,6 +13,15 @@ const perrito: PerritoRegistro = {
   nombre: 'Luna',
   razaId: 2,
   razaNombre: 'Husky Siberiano',
+  sexo: 'hembra',
+  etapaVida: 'adulto',
+  tamano: 'mediano',
+  longitudPelaje: 'corto',
+  marcasDistintivas: 'Mancha blanca en el pecho',
+  patronPelajeId: 4,
+  patronPelajeNombre: 'Bicolor',
+  colorOjosId: 3,
+  colorOjosNombre: 'Azul',
   latitud: 25.1,
   longitud: -100.2,
   fechaRegistro: '2026-09-26T18:40:00.000Z',
@@ -31,6 +40,8 @@ function repo(overrides: Partial<PerritosRepository> = {}): PerritosRepository {
     crear: async (datos) => ({ perrito: { ...perrito, id: 7, nombre: datos.nombre }, replay: false }),
     listarRazas: async () => [{ id: 2, nombre: 'Husky Siberiano' }],
     listarColores: async () => [{ id: 1, nombre: 'Negro' }],
+    listarColoresOjos: async () => [{ id: 3, nombre: 'Café' }],
+    listarPatronesPelaje: async () => [{ id: 4, nombre: 'Bicolor' }],
     estadisticasPorColor: async () => [{ id: 1, nombre: 'Negro', total: 3 }],
     contarPerritos: async () => 3,
     ...overrides,
@@ -49,6 +60,12 @@ function appCon(repository: PerritosRepository = repo()) {
 const datosValidos = JSON.stringify({
   nombre: 'Luna',
   razaId: 2,
+  sexo: 'hembra',
+  etapaVida: 'adulto',
+  tamano: 'mediano',
+  longitudPelaje: 'corto',
+  patronPelajeId: 2,
+  colorOjosId: 3,
   colorPrincipalId: 1,
   coloresAdicionalesIds: [2],
   latitud: 25.1,
@@ -66,6 +83,15 @@ describe('GET /api/perritos', () => {
     expect(response.body.data[0].colorPrincipal.nombre).toBe('Negro');
     expect(response.body.data[0].coloresAdicionales).toHaveLength(1);
     expect(response.body.data[0].raza.nombre).toBe('Husky Siberiano');
+    expect(response.body.data[0]).toMatchObject({
+      sexo: 'hembra',
+      etapaVida: 'adulto',
+      tamano: 'mediano',
+      longitudPelaje: 'corto',
+      marcasDistintivas: 'Mancha blanca en el pecho',
+      patronPelaje: { id: 4, nombre: 'Bicolor' },
+      colorOjos: { id: 3, nombre: 'Azul' },
+    });
   });
 
   it('rechaza filtros inválidos', async () => {
@@ -103,6 +129,20 @@ describe('GET /api/razas y /api/colores', () => {
     expect(razas.body.data[0]).toMatchObject({ id: 2, nombre: 'Husky Siberiano' });
     expect(colores.status).toBe(200);
     expect(colores.body.data[0]).toMatchObject({ id: 1, nombre: 'Negro', hex: null });
+  });
+
+  it('devuelve el catálogo de colores de ojos', async () => {
+    const response = await request(appCon()).get('/api/colores-ojos');
+
+    expect(response.status).toBe(200);
+    expect(response.body.data[0]).toMatchObject({ id: 3, nombre: 'Café', hex: null });
+  });
+
+  it('devuelve el catálogo de patrones de pelaje', async () => {
+    const response = await request(appCon()).get('/api/patrones-pelaje');
+
+    expect(response.status).toBe(200);
+    expect(response.body.data[0]).toMatchObject({ id: 4, nombre: 'Bicolor' });
   });
 });
 
@@ -201,6 +241,12 @@ describe('POST /api/perritos', () => {
       .set('Idempotency-Key', 'clave-individual-123')
       .field('nombre', 'Luna')
       .field('razaId', '2')
+      .field('sexo', 'hembra')
+      .field('etapaVida', 'adulto')
+      .field('tamano', 'mediano')
+      .field('longitudPelaje', 'corto')
+      .field('patronPelajeId', '2')
+      .field('colorOjosId', '3')
       .field('colorPrincipalId', '1')
       .field('coloresAdicionalesIds', '2')
       .field('coloresAdicionalesIds', '3')
@@ -212,6 +258,23 @@ describe('POST /api/perritos', () => {
     expect(response.body.data.id).toBe(7);
   });
 
+  it('400 si falta un campo descriptivo obligatorio', async () => {
+    const response = await request(appCon())
+      .post('/api/perritos')
+      .set('Idempotency-Key', 'clave-sin-sexo-123')
+      .field('nombre', 'Luna')
+      .field('colorPrincipalId', '1')
+      .field('etapaVida', 'adulto')
+      .field('tamano', 'mediano')
+      .field('longitudPelaje', 'corto')
+      .field('patronPelajeId', '2')
+      .field('latitud', '25.1')
+      .field('longitud', '-100.2')
+      .attach('foto', PNG, 'foto.png');
+
+    expect(response.status).toBe(400);
+  });
+
   it('400 si un color adicional repite el principal (campos individuales)', async () => {
     const response = await request(appCon())
       .post('/api/perritos')
@@ -219,6 +282,56 @@ describe('POST /api/perritos', () => {
       .field('nombre', 'Luna')
       .field('colorPrincipalId', '1')
       .field('coloresAdicionalesIds', '1')
+      .field('latitud', '25.1')
+      .field('longitud', '-100.2')
+      .attach('foto', PNG, 'foto.png');
+
+    expect(response.status).toBe(400);
+  });
+
+  it('reenvía los campos descriptivos al repositorio', async () => {
+    const crear = vi.fn(async () => ({ perrito: { ...perrito, id: 7 }, replay: false }));
+    const app = appCon(repo({ crear }));
+
+    const response = await request(app)
+      .post('/api/perritos')
+      .set('Idempotency-Key', 'clave-opcionales-123')
+      .field('nombre', 'Luna')
+      .field('razaId', '2')
+      .field('colorPrincipalId', '1')
+      .field('sexo', 'hembra')
+      .field('etapaVida', 'cachorro')
+      .field('tamano', 'mediano')
+      .field('longitudPelaje', 'largo')
+      .field('patronPelajeId', '4')
+      .field('colorOjosId', '3')
+      .field('marcasDistintivas', 'Collar rojo')
+      .field('latitud', '25.1')
+      .field('longitud', '-100.2')
+      .attach('foto', PNG, 'foto.png');
+
+    expect(response.status).toBe(201);
+    expect(crear).toHaveBeenCalledWith(
+      expect.objectContaining({
+        sexo: 'hembra',
+        etapaVida: 'cachorro',
+        tamano: 'mediano',
+        longitudPelaje: 'largo',
+        patronPelajeId: 4,
+        colorOjosId: 3,
+        marcasDistintivas: 'Collar rojo',
+      }),
+      'clave-opcionales-123',
+    );
+  });
+
+  it('400 si un campo descriptivo trae un valor fuera de la lista', async () => {
+    const response = await request(appCon())
+      .post('/api/perritos')
+      .set('Idempotency-Key', 'clave-valor-invalido-1')
+      .field('nombre', 'Luna')
+      .field('colorPrincipalId', '1')
+      .field('sexo', 'desconocido')
       .field('latitud', '25.1')
       .field('longitud', '-100.2')
       .attach('foto', PNG, 'foto.png');

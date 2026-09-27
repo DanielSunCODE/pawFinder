@@ -11,8 +11,17 @@ export interface ColorRegistro {
 export interface PerritoRegistro {
   id: number;
   nombre: string;
-  razaId: number | null;
-  razaNombre: string | null;
+  razaId: number;
+  razaNombre: string;
+  sexo: string;
+  etapaVida: string;
+  tamano: string;
+  longitudPelaje: string;
+  marcasDistintivas: string | null;
+  patronPelajeId: number;
+  patronPelajeNombre: string;
+  colorOjosId: number;
+  colorOjosNombre: string;
   latitud: number;
   longitud: number;
   fechaRegistro: string;
@@ -22,7 +31,14 @@ export interface PerritoRegistro {
 
 export interface NuevoPerritoGuardado {
   nombre: string;
-  razaId: number | null;
+  razaId: number;
+  sexo: string;
+  etapaVida: string;
+  tamano: string;
+  longitudPelaje: string;
+  marcasDistintivas: string | null;
+  patronPelajeId: number;
+  colorOjosId: number;
   colorPrincipalId: number;
   coloresAdicionalesIds: number[];
   latitud: number;
@@ -53,6 +69,8 @@ export interface PerritosRepository {
   crear(datos: NuevoPerritoGuardado, clave: string): Promise<ResultadoCreacion>;
   listarRazas(): Promise<CatalogoItem[]>;
   listarColores(): Promise<CatalogoItem[]>;
+  listarColoresOjos(): Promise<CatalogoItem[]>;
+  listarPatronesPelaje(): Promise<CatalogoItem[]>;
   estadisticasPorColor(): Promise<ConteoPorColor[]>;
   contarPerritos(): Promise<number>;
 }
@@ -64,8 +82,17 @@ interface FilaPerrito extends RowDataPacket {
   longitud: string | number;
   fecha_registro: Date | string;
   ruta_imagen: string;
-  id_raza: number | null;
-  raza: string | null;
+  id_raza: number;
+  raza: string;
+  sexo: string;
+  etapa_vida: string;
+  tamano: string;
+  longitud_pelaje: string;
+  marcas_distintivas: string | null;
+  id_patron: number;
+  patron: string;
+  id_color_ojo: number;
+  color_ojo: string;
   id_color: number | null;
   color: string | null;
   es_dominante: number | null;
@@ -79,10 +106,15 @@ interface FilaPerrito extends RowDataPacket {
 const SELECT_PERRITO = `
   SELECT
     p.id_perro, p.nombre, p.latitud, p.longitud, p.fecha_registro, p.ruta_imagen,
+    p.sexo, p.etapa_vida, p.tamano, p.longitud_pelaje, p.marcas_distintivas,
     r.id_raza, r.raza,
+    pp.id_patron, pp.patron,
+    co.id_color_ojo, co.color_ojo,
     c.id_color, c.color, pc.es_dominante
   FROM perros p
   LEFT JOIN razas r ON r.id_raza = p.id_raza
+  LEFT JOIN patrones_pelaje pp ON pp.id_patron = p.id_patron
+  LEFT JOIN colores_ojos co ON co.id_color_ojo = p.id_color_ojo
   LEFT JOIN perro_colores pc ON pc.id_perro = p.id_perro
   LEFT JOIN colores c ON c.id_color = pc.id_color
 `;
@@ -111,6 +143,15 @@ function agrupar(filas: FilaPerrito[]): PerritoRegistro[] {
       nombre: fila.nombre,
       razaId: fila.id_raza,
       razaNombre: fila.raza,
+      sexo: fila.sexo,
+      etapaVida: fila.etapa_vida,
+      tamano: fila.tamano,
+      longitudPelaje: fila.longitud_pelaje,
+      marcasDistintivas: fila.marcas_distintivas,
+      patronPelajeId: fila.id_patron,
+      patronPelajeNombre: fila.patron,
+      colorOjosId: fila.id_color_ojo,
+      colorOjosNombre: fila.color_ojo,
       latitud: Number(fila.latitud),
       longitud: Number(fila.longitud),
       fechaRegistro: new Date(fila.fecha_registro).toISOString(),
@@ -182,8 +223,23 @@ export function createPerritosRepository(pool: Pool): PerritosRepository {
         await conn.beginTransaction();
 
         const [resultado] = await conn.query<ResultSetHeader>(
-          'INSERT INTO perros (nombre, id_raza, latitud, longitud, ruta_imagen) VALUES (?, ?, ?, ?, ?)',
-          [datos.nombre, datos.razaId, datos.latitud, datos.longitud, datos.rutaImagen],
+          `INSERT INTO perros
+             (nombre, id_raza, sexo, id_patron, id_color_ojo, longitud_pelaje, tamano, etapa_vida, marcas_distintivas, latitud, longitud, ruta_imagen)
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+          [
+            datos.nombre,
+            datos.razaId,
+            datos.sexo,
+            datos.patronPelajeId,
+            datos.colorOjosId,
+            datos.longitudPelaje,
+            datos.tamano,
+            datos.etapaVida,
+            datos.marcasDistintivas,
+            datos.latitud,
+            datos.longitud,
+            datos.rutaImagen,
+          ],
         );
         const id = resultado.insertId;
 
@@ -215,7 +271,16 @@ export function createPerritosRepository(pool: Pool): PerritosRepository {
           if (existente) return { perrito: existente, replay: true };
         }
         if (esCodigo(error, 'ER_NO_REFERENCED_ROW_2')) {
-          throw new HttpError(400, 'La raza o el color indicado no existe.');
+          throw new HttpError(
+            400,
+            'La raza, el color, el patrón de pelaje o el color de ojos indicado no existe.',
+          );
+        }
+        if (esCodigo(error, 'ER_BAD_NULL_ERROR')) {
+          throw new HttpError(400, 'Falta un dato obligatorio del registro.');
+        }
+        if (esCodigo(error, 'ER_DATA_TOO_LONG')) {
+          throw new HttpError(400, 'Uno de los textos del registro es demasiado largo.');
         }
         throw error;
       } finally {
@@ -233,6 +298,20 @@ export function createPerritosRepository(pool: Pool): PerritosRepository {
     async listarColores() {
       const [filas] = await pool.query<RowDataPacket[]>(
         'SELECT id_color AS id, color AS nombre FROM colores ORDER BY color ASC',
+      );
+      return filas.map((fila) => ({ id: fila.id as number, nombre: fila.nombre as string }));
+    },
+
+    async listarColoresOjos() {
+      const [filas] = await pool.query<RowDataPacket[]>(
+        'SELECT id_color_ojo AS id, color_ojo AS nombre FROM colores_ojos ORDER BY color_ojo ASC',
+      );
+      return filas.map((fila) => ({ id: fila.id as number, nombre: fila.nombre as string }));
+    },
+
+    async listarPatronesPelaje() {
+      const [filas] = await pool.query<RowDataPacket[]>(
+        'SELECT id_patron AS id, patron AS nombre FROM patrones_pelaje ORDER BY patron ASC',
       );
       return filas.map((fila) => ({ id: fila.id as number, nombre: fila.nombre as string }));
     },

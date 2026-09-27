@@ -37,7 +37,16 @@ CREATE TABLE IF NOT EXISTS perros (
     CONSTRAINT chk_tamano CHECK (tamano IN ('pequeño', 'mediano', 'grande', 'gigante')),
     CONSTRAINT chk_etapa  CHECK (etapa_vida IN ('cachorro', 'adulto', 'senior')),
     CONSTRAINT chk_latitud  CHECK (latitud BETWEEN -90 AND 90),
-    CONSTRAINT chk_longitud CHECK (longitud BETWEEN -180 AND 180)
+    CONSTRAINT chk_longitud CHECK (longitud BETWEEN -180 AND 180),
+
+    -- Los índices van dentro del CREATE TABLE para que la migración sea
+    -- idempotente (un CREATE INDEX suelto falla si el índice ya existe).
+    INDEX idx_perro_raza   (id_raza),
+    INDEX idx_perro_patron (id_patron),
+    INDEX idx_perro_tamano (tamano),
+    INDEX idx_perro_sexo   (sexo),
+    INDEX idx_perro_etapa  (etapa_vida),
+    INDEX idx_perro_nombre (nombre)
 );
 
 CREATE TABLE IF NOT EXISTS perro_colores (
@@ -46,13 +55,6 @@ CREATE TABLE IF NOT EXISTS perro_colores (
     es_dominante TINYINT NOT NULL DEFAULT 0,
     PRIMARY KEY (id_perro, id_color),
     CONSTRAINT fk_perrocolor_perro FOREIGN KEY (id_perro) REFERENCES perros(id_perro) ON DELETE CASCADE,
-    CONSTRAINT fk_perrocolor_color FOREIGN KEY (id_color) REFERENCES colores(id_color)
+    CONSTRAINT fk_perrocolor_color FOREIGN KEY (id_color) REFERENCES colores(id_color),
+    INDEX idx_perrocolor_color (id_color)
 );
-
-CREATE INDEX idx_perro_raza    ON perros(id_raza);
-CREATE INDEX idx_perro_patron  ON perros(id_patron);
-CREATE INDEX idx_perro_tamano  ON perros(tamano);
-CREATE INDEX idx_perro_sexo    ON perros(sexo);
-CREATE INDEX idx_perro_etapa   ON perros(etapa_vida);
-CREATE INDEX idx_perro_nombre  ON perros(nombre);
-CREATE INDEX idx_perrocolor_color ON perro_colores(id_color);

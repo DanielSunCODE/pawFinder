@@ -18,6 +18,8 @@ describe('GET /api/openapi.json', () => {
       '/api/perritos/{id}/foto',
       '/api/razas',
       '/api/colores',
+      '/api/colores-ojos',
+      '/api/patrones-pelaje',
       '/api/estadisticas',
     ]) {
       expect(response.body.paths[ruta], `falta ${ruta}`).toBeDefined();

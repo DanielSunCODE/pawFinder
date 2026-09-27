@@ -1,20 +1,20 @@
 # PawFinder · Frontend
 
-Interfaz web para registrar perritos de la calle: foto, nombre, raza, colores y ubicación en el mapa.
+Interfaz web para registrar perritos de la calle: foto, nombre, raza, sexo, edad, tamaño, pelo, colores,
+ojos, marcas distintivas y ubicación en el mapa.
 Pensada primero para celular (se usa en la calle) y adaptada a computadora.
 
 > Este documento cubre sólo el frontend. El `README.md` de la raíz del repositorio es el oficial
 > del proyecto; de aquí se pueden copiar las secciones del frontend.
-> El formato de respuestas del backend está en `openspec/changes/bootstrap-project/design.md`
-> (sección "Contrato de respuestas y errores"). `src/api/http.ts` acepta ese formato (`{ data }`,
-> `{ error: { message, details } }`) y también el de `contrato-api.md` (`{ error: { mensaje, campos } }`).
+> Las respuestas del backend llegan como `{ data }` y los errores como `{ error: { message, details } }`
+> (ver `openspec/changes/bootstrap-project/design.md` y Swagger en `/api/docs`).
 
 ## Tecnologías y versiones exactas
 
 | Pieza | Versión | Para qué |
 |---|---|---|
 | Node.js | 22.22.2 (LTS; cualquier ≥ 22.12 funciona, también 24 LTS) | Correr las herramientas |
-| npm | 10.9.7 (viene con Node) | Instalar dependencias |
+| npm | 10.9 o 11 (viene con Node) | Instalar dependencias |
 | TypeScript | 6.0.3 | Lenguaje |
 | React / React DOM | 19.3.0 | Interfaz |
 | React Router | 8.4.0 | Pantallas y URLs |
@@ -176,7 +176,7 @@ frontend/
     ├── App.tsx               Rutas: qué pantalla va en cada URL
     ├── config.ts             Lee las variables de entorno
     ├── api/
-    │   ├── tipos.ts          Contrato con el backend (tipos de datos)
+    │   ├── tipos.ts          Tipos de los datos que se reciben y envían
     │   ├── http.ts           Llamadas al backend (fetch)
     │   ├── errores.ts        Errores → mensajes entendibles
     │   └── index.ts          Exporta `api`, lo único que usan las pantallas
@@ -187,12 +187,12 @@ frontend/
     │   └── RegistrarPage.tsx Formulario
     ├── components/           Piezas reutilizables (encabezado, tarjetas, mapa, campos del formulario)
     ├── hooks/                useAsync (pedir datos), useValorRetrasado (esperar a que dejen de escribir)
-    ├── utils/                Validación, foto, idempotencia, reintentos, ubicación, formato
+    ├── utils/                Validación, opciones fijas, foto, idempotencia, reintentos, ubicación, formato
     └── styles/global.css     Tailwind: colores del tema (@theme), botones y medidas compartidas
 ```
 
-Las pantallas nunca llaman a `fetch` directamente: usan `api` de `src/api`. Cuando el backend cambie
-algo del contrato, sólo se toca `src/api/`.
+Las pantallas nunca llaman a `fetch` directamente: usan `api` de `src/api`. Si el backend cambia el
+nombre de un campo o de una ruta, sólo se toca `src/api/`.
 
 ## Requisitos del enunciado que cubre el frontend
 
@@ -200,11 +200,16 @@ algo del contrato, sólo se toca `src/api/`.
 |---|---|
 | Foto: tomar con la cámara **o** subir; JPG, PNG o WEBP | `components/formulario/SelectorFoto.tsx`, `utils/imagen.ts` |
 | Nombre obligatorio (sólo espacios no cuenta) | `utils/validacion.ts` |
-| Raza de catálogo, opcional | `pages/RegistrarPage.tsx` (catálogo viene de `GET /api/razas`) |
+| Raza de catálogo, obligatoria ("Sin raza definida / Criollo" por defecto) | `pages/RegistrarPage.tsx` |
+| Sexo, edad, tamaño, largo y patrón del pelo: obligatorios, se eligen de listas | `components/formulario/SelectorOpciones.tsx`, `utils/validacion.ts`, `utils/opciones.ts` |
+| Color de ojos: obligatorio, se elige de la lista | `components/formulario/SelectorOpciones.tsx`, `utils/validacion.ts`, `utils/opciones.ts` |
+| Pelaje "Sólido" = sólo color principal | `pages/RegistrarPage.tsx`, `utils/validacion.ts` |
+| Marcas distintivas: texto opcional, máximo 500 | `pages/RegistrarPage.tsx`, `utils/validacion.ts` |
 | Un color principal + 0 a 2 adicionales, sin repetir | `components/formulario/SelectorColores.tsx`, `utils/validacion.ts` |
 | Ubicación: la actual o moviendo el pin; se guardan latitud y longitud | `components/formulario/SelectorUbicacion.tsx` |
 | Fecha automática | La pone el backend; el frontend sólo la muestra |
 | Mapa con un pin por perrito; al tocarlo, foto, nombre y colores | `pages/MapaPage.tsx` |
+| "Ver en el mapa" desde el detalle enfoca a ese perrito (`/?perrito=<id>`); "Cómo llegar" abre la ruta | `pages/DetallePage.tsx`, `pages/MapaPage.tsx` |
 | Lista con foto en miniatura | `pages/ListaPage.tsx` |
 | Detalle de un registro | `pages/DetallePage.tsx` |
 | Errores entendibles ("Falta la foto", no "Error 400") | `api/errores.ts`, `utils/validacion.ts` |

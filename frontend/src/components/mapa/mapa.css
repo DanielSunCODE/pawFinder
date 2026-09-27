@@ -59,9 +59,15 @@
   transform: translateX(-50%);
 }
 
-.pin-perrito__marco img {
+/* La foto del pin siempre es un círculo 1:1: se recorta al centro sin importar la proporción
+   de la foto. El selector es largo a propósito: leaflet.css tiene
+   `.leaflet-container .leaflet-marker-pane img { width: auto }`, que es más específico que
+   `.pin-perrito__marco img` y dejaba la foto con su ancho original (se veía ovalada). */
+.leaflet-container .leaflet-marker-pane .pin-perrito__marco img {
+  display: block;
   width: 100%;
   height: 100%;
+  aspect-ratio: 1;
   border-radius: 50%;
   object-fit: cover;
   background: #fff;

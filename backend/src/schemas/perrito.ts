@@ -5,6 +5,19 @@ import { z } from 'zod';
  * validar en el backend y para generar la documentacion OpenAPI.
  */
 
+// Valores fijos que acepta la base (CHECK en 002_dogs.sql). El backend repite
+// la validación: no confía en el cliente.
+const SEXOS = ['macho', 'hembra'] as const;
+const ETAPAS_VIDA = ['cachorro', 'adulto', 'senior'] as const;
+const TAMANOS = ['pequeño', 'mediano', 'grande', 'gigante'] as const;
+const LONGITUDES_PELAJE = ['corto', 'mediano', 'largo'] as const;
+
+/** Texto opcional que llega del multipart: vacío o ausente se guarda como NULL. */
+const textoOpcional = z.preprocess(
+  (valor) => (valor === undefined || valor === null || valor === '' ? null : valor),
+  z.string().trim().max(500).nullable(),
+);
+
 /** Cuerpo de `datos` (JSON) que viaja dentro del multipart del registro. */
 export const datosPerritoNuevoSchema = z
   .object({
@@ -14,6 +27,15 @@ export const datosPerritoNuevoSchema = z
       .min(1, 'El nombre no puede estar vacío.')
       .max(60, 'El nombre no puede pasar de 60 caracteres.'),
     razaId: z.number().int().positive().nullable().default(null),
+    // Campos descriptivos opcionales (null = "no se sabe").
+    sexo: z.enum(SEXOS).nullable().default(null),
+    etapaVida: z.enum(ETAPAS_VIDA).nullable().default(null),
+    tamano: z.enum(TAMANOS).nullable().default(null),
+    longitudPelaje: z.enum(LONGITUDES_PELAJE).nullable().default(null),
+    patronPelajeId: z.number().int().positive().nullable().default(null),
+    colorOjosId: z.number().int().positive().nullable().default(null),
+    marcasDistintivas: textoOpcional.default(null),
+    // Colores de pelo.
     colorPrincipalId: z.number().int().positive(),
     coloresAdicionalesIds: z.array(z.number().int().positive()).max(2).default([]),
     latitud: z.number().min(-90).max(90),

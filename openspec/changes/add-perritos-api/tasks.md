@@ -30,9 +30,17 @@
 - [x] 5.1 Enviar los campos individuales del multipart desde `frontend/src/api/http.ts`
 - [x] 5.2 Actualizar README, `backend/README.md`, `docs/architecture.md` y `docs/database-schema.md`
 
-## 6. Verificación
+## 6. Campos completos del esquema `perros`
 
-- [x] 6.1 Pruebas de listado, detalle, catálogos, estadísticas y foto
-- [x] 6.2 Pruebas de registro: validaciones, foto inválida, campos individuales e idempotencia
-- [x] 6.3 `typecheck`, suite del backend, `db:typecheck` y `build`
-- [x] 6.4 `openspec validate add-perritos-api --strict`
+- [x] 6.1 Esquema Zod del registro con los descriptivos opcionales (`sexo`, `etapaVida`, `tamano`, `longitudPelaje`, `patronPelajeId`, `colorOjosId`, `marcasDistintivas`)
+- [x] 6.2 Repositorio: JOIN a `patrones_pelaje` y `colores_ojos`, y `INSERT`/`SELECT` con todas las columnas
+- [x] 6.3 Mapper y OpenAPI (`Perrito` y `SubidaPerrito`) con los campos descriptivos
+- [x] 6.4 Frontend: enviar los campos en el multipart de `crearPerrito`
+- [x] 6.5 Pruebas de registro con campos descriptivos y de rechazo de valores inválidos
+
+## 7. Verificación
+
+- [x] 7.1 Pruebas de listado, detalle, catálogos, estadísticas y foto
+- [x] 7.2 Pruebas de registro: validaciones, foto inválida, campos individuales e idempotencia
+- [x] 7.3 `typecheck`, suite del backend, `db:typecheck` y `build`
+- [x] 7.4 `openspec validate add-perritos-api --strict`

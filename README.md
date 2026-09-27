@@ -155,7 +155,9 @@ npm run dev:red --workspace @pawfinder/frontend
 | POST | `/api/perritos` | ✅ | Registrar perrito (multipart: `datos` + `foto`, header `Idempotency-Key`). |
 | GET | `/api/perritos/{id}/foto` | ✅ | Foto del perrito servida por el backend (no expone carpeta ni bucket). |
 | GET | `/api/razas` | ✅ | Catálogo de razas. |
-| GET | `/api/colores` | ✅ | Catálogo de colores. |
+| GET | `/api/colores` | ✅ | Catálogo de colores de pelo. |
+| GET | `/api/colores-ojos` | ✅ | Catálogo de colores de ojos. |
+| GET | `/api/patrones-pelaje` | ✅ | Catálogo de patrones de pelaje. |
 | GET | `/api/estadisticas` | ✅ | Conteo agregado en SQL (total y perritos por color). |
 | GET | `/api/openapi.json` | ✅ | Documento OpenAPI 3.1 en JSON. |
 | GET | `/api/docs` | ✅ | Interfaz Swagger UI. |
@@ -234,6 +236,9 @@ Detalle completo en [`docs/deployment.md`](./docs/deployment.md). Resumen:
   contraseñas se guardan en el panel de variables de cada servicio, nunca en el repo.
 - **Puertos:** solo el 443/80 de los servicios públicos; **la base de datos no se
   expone** a internet.
+- **Bucket S3:** guía paso a paso con **AWS CLI** (instalación, credenciales,
+  crear bucket privado, usuario IAM con permiso mínimo y verificación) en
+  [`docs/deployment.md`](./docs/deployment.md) §5.
 - **Respaldos:** `mysqldump` para la base y copia del bucket/`RUTA_IMAGENES` para
   las imágenes (ver `docs/deployment.md`).
 - **Sin Docker:** si se auto-hospeda, instalación directa con un servicio

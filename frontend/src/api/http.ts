@@ -99,18 +99,19 @@ export function crearApiHttp(urlBase: string): ApiPerritos {
 
     obtenerPerrito: async (id: Id) => normalizarPerrito(await pedir<Perrito>(`/perritos/${encodeURIComponent(id)}`)),
 
-<<<<<<< HEAD
-    crearPerrito(datos, foto, claveIdempotencia) {
-      // multipart/form-data con campos individuales + la foto. No ponemos
-      // Content-Type a mano: el navegador lo agrega con el "boundary" correcto.
-=======
     async crearPerrito(datos, foto, claveIdempotencia) {
       // multipart/form-data: un campo "datos" con JSON y un campo "foto" con el archivo.
       // No ponemos Content-Type a mano: el navegador lo agrega con el "boundary" correcto.
->>>>>>> 78636632f10765c2141b8a17837b8088f5c7271d
       const formulario = new FormData()
       formulario.append('nombre', datos.nombre)
       if (datos.razaId !== null) formulario.append('razaId', String(datos.razaId))
+      if (datos.sexo !== null) formulario.append('sexo', datos.sexo)
+      if (datos.etapaVida !== null) formulario.append('etapaVida', datos.etapaVida)
+      if (datos.tamano !== null) formulario.append('tamano', datos.tamano)
+      if (datos.longitudPelaje !== null) formulario.append('longitudPelaje', datos.longitudPelaje)
+      if (datos.patronPelajeId !== null) formulario.append('patronPelajeId', String(datos.patronPelajeId))
+      if (datos.colorOjosId !== null) formulario.append('colorOjosId', String(datos.colorOjosId))
+      if (datos.marcasDistintivas !== null) formulario.append('marcasDistintivas', datos.marcasDistintivas)
       formulario.append('colorPrincipalId', String(datos.colorPrincipalId))
       for (const id of datos.coloresAdicionalesIds) {
         formulario.append('coloresAdicionalesIds', String(id))

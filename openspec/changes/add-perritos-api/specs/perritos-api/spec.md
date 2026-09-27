@@ -16,7 +16,7 @@ El API SHALL devolver el listado de perritos con sus colores, permitiendo filtra
 - **THEN** solo se devuelven los perritos que tienen ese color, y el filtro se aplica en la consulta SQL (no en el navegador)
 
 ### Requirement: Ver el detalle de un perrito
-El API SHALL devolver un perrito por su identificador, incluyendo raza, color principal y hasta dos colores adicionales, y SHALL responder con un error entendible cuando no existe.
+El API SHALL devolver un perrito por su identificador, incluyendo raza, color principal, hasta dos colores adicionales y los campos descriptivos del esquema (sexo, etapa de vida, tamaño, longitud de pelaje, patrón de pelaje, color de ojos y marcas distintivas), usando `null` cuando no se conocen; SHALL responder con un error entendible cuando no existe.
 
 #### Scenario: Perrito existente
 - **WHEN** se solicita `GET /api/perritos/{id}` con un id válido que existe
@@ -31,11 +31,19 @@ El API SHALL devolver un perrito por su identificador, incluyendo raza, color pr
 - **THEN** responde 400 con un mensaje entendible
 
 ### Requirement: Registrar un perrito con validación en el servidor
-El registro SHALL recibir multipart con los datos y la foto, y SHALL validar en el servidor que el nombre no esté vacío, que haya exactamente un color principal, que los colores adicionales sean de 0 a 2 sin repetir ni incluir el principal, y que latitud y longitud estén en rango; la raza es opcional.
+El registro SHALL recibir multipart con los datos y la foto, y SHALL validar en el servidor que el nombre no esté vacío, que haya exactamente un color principal, que los colores adicionales sean de 0 a 2 sin repetir ni incluir el principal, y que latitud y longitud estén en rango; la raza es opcional. Además SHALL aceptar los campos descriptivos opcionales del esquema (sexo, etapa de vida, tamaño, longitud de pelaje, patrón de pelaje, color de ojos y marcas distintivas), validándolos contra sus listas fijas, y SHALL guardarlos y devolverlos en la respuesta.
 
 #### Scenario: Registro válido
 - **WHEN** se envía un registro con nombre, un color principal, 0 a 2 colores adicionales válidos, latitud/longitud y una foto JPG, PNG o WEBP
 - **THEN** responde 201 con el perrito creado
+
+#### Scenario: Registro con campos descriptivos
+- **WHEN** se envían sexo, etapa de vida, tamaño, longitud de pelaje, patrón de pelaje, color de ojos o marcas distintivas válidos
+- **THEN** responde 201 y el perrito guardado y devuelto incluye esos campos
+
+#### Scenario: Campo descriptivo fuera de las listas
+- **WHEN** un campo descriptivo trae un valor que no está en su lista fija (por ejemplo, un sexo distinto de macho/hembra)
+- **THEN** responde 400 con el detalle del campo inválido
 
 #### Scenario: Nombre vacío
 - **WHEN** el nombre está vacío o son solo espacios
@@ -79,12 +87,12 @@ El API SHALL entregar la foto de un perrito a través de un endpoint propio, sin
 - **WHEN** se solicita la foto de un perrito que no existe o cuya imagen no se puede leer
 - **THEN** responde 404 con un mensaje entendible
 
-### Requirement: Catálogos de razas y colores
-El API SHALL exponer los catálogos de razas (incluyendo "Sin raza definida / Criollo") y de colores, para llenar el formulario.
+### Requirement: Catálogos del formulario
+El API SHALL exponer los catálogos que llena el formulario: razas (incluyendo "Sin raza definida / Criollo"), colores de pelo, colores de ojos y patrones de pelaje.
 
 #### Scenario: Consultar catálogos
-- **WHEN** se solicitan `GET /api/razas` y `GET /api/colores`
-- **THEN** devuelve las listas de razas y colores disponibles
+- **WHEN** se solicitan `GET /api/razas`, `GET /api/colores`, `GET /api/colores-ojos` y `GET /api/patrones-pelaje`
+- **THEN** devuelve las listas de razas, colores de pelo, colores de ojos y patrones de pelaje disponibles
 
 ### Requirement: Estadísticas agregadas
 El API SHALL exponer un resumen calculado con una consulta de agregación en SQL, con el total de perritos y el conteo por color.
@@ -98,4 +106,4 @@ Los endpoints del dominio SHALL estar documentados en OpenAPI generado desde los
 
 #### Scenario: Revisar el registro en Swagger UI
 - **WHEN** se abre `/api/docs` y se expande `POST /api/perritos`
-- **THEN** el cuerpo muestra los campos `nombre`, `razaId`, `colorPrincipalId`, `coloresAdicionalesIds`, `latitud`, `longitud` y `foto` (binaria), y el encabezado `Idempotency-Key`
+- **THEN** el cuerpo muestra los campos `nombre`, `razaId`, `colorPrincipalId`, `coloresAdicionalesIds`, los descriptivos opcionales (`sexo`, `etapaVida`, `tamano`, `longitudPelaje`, `patronPelajeId`, `colorOjosId`, `marcasDistintivas`), `latitud`, `longitud` y `foto` (binaria), además del encabezado `Idempotency-Key`

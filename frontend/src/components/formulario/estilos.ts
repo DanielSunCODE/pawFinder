@@ -21,8 +21,14 @@ export const estilos = {
   // 16px de letra: evita que el iPhone haga zoom al enfocar el campo
   entrada:
     'h-12.5 w-full rounded-campo border-[1.5px] bg-superficie px-4 text-base focus:border-primario-vivo focus:ring-3 focus:ring-primario-suave focus:outline-none',
+  // Texto de varias líneas (marcas distintivas)
+  areaTexto:
+    'min-h-24 w-full resize-y rounded-campo border-[1.5px] bg-superficie px-4 py-3 text-base focus:border-primario-vivo focus:ring-3 focus:ring-primario-suave focus:outline-none',
+  contador: 'self-end text-xs font-semibold text-texto-suave',
   error: 'text-sm font-bold text-error',
   ayuda: 'flex flex-wrap items-center gap-1 text-sm font-semibold text-texto',
+  ayudaOpcion: '-mt-1 text-sm font-semibold text-texto-suave',
+  separador: 'border-t border-borde',
   ayudaSuave: 'text-texto-suave',
   aviso: 'rounded-chico bg-aviso-suave px-3.5 py-2.5 text-sm font-semibold',
 

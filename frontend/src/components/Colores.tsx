@@ -3,7 +3,7 @@ import type { Color } from '../api'
 import { clases } from '../utils/clases'
 import { colorCss } from '../utils/transformaciones'
 
-export function Muestra({ hex, tamano = 16, className }: { hex: string | null; tamano?: number; className?: string }) {
+export function Muestra({ hex, tamano = 16, className }: { hex?: string | null; tamano?: number; className?: string }) {
   return (
     <span
       // El borde interior hace que el blanco y el crema se distingan del fondo

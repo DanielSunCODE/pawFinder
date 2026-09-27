@@ -62,6 +62,14 @@ const REGLAS: Regla[] = [
   // Raza: obligatoria (si no se sabe, existe "Sin raza definida / Criollo")
   ({ razaId }) => (razaId !== null ? null : ['razaId', 'Elige la raza. Si no sabes, deja "Sin raza definida".']),
 
+  // Apariencia obligatoria: sexo, edad, tamaño, largo y patrón del pelaje
+  ({ sexo }) => (sexo !== null ? null : ['sexo', 'Elige el sexo.']),
+  ({ etapaVida }) => (etapaVida !== null ? null : ['etapaVida', 'Elige la edad.']),
+  ({ tamano }) => (tamano !== null ? null : ['tamano', 'Elige el tamaño.']),
+  ({ longitudPelaje }) => (longitudPelaje !== null ? null : ['longitudPelaje', 'Elige el largo del pelo.']),
+  ({ patronPelajeId }) => (patronPelajeId !== null ? null : ['patronPelajeId', 'Elige el patrón del pelaje.']),
+  ({ colorOjosId }) => (colorOjosId !== null ? null : ['colorOjosId', 'Elige el color de ojos.']),
+
   // Color principal: exactamente uno
   ({ colorPrincipalId }) => (colorPrincipalId !== null ? null : ['colorPrincipalId', 'Elige el color principal.']),
 

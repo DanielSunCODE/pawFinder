@@ -60,6 +60,12 @@ function appCon(repository: PerritosRepository = repo()) {
 const datosValidos = JSON.stringify({
   nombre: 'Luna',
   razaId: 2,
+  sexo: 'hembra',
+  etapaVida: 'adulto',
+  tamano: 'mediano',
+  longitudPelaje: 'corto',
+  patronPelajeId: 2,
+  colorOjosId: 3,
   colorPrincipalId: 1,
   coloresAdicionalesIds: [2],
   latitud: 25.1,
@@ -235,6 +241,12 @@ describe('POST /api/perritos', () => {
       .set('Idempotency-Key', 'clave-individual-123')
       .field('nombre', 'Luna')
       .field('razaId', '2')
+      .field('sexo', 'hembra')
+      .field('etapaVida', 'adulto')
+      .field('tamano', 'mediano')
+      .field('longitudPelaje', 'corto')
+      .field('patronPelajeId', '2')
+      .field('colorOjosId', '3')
       .field('colorPrincipalId', '1')
       .field('coloresAdicionalesIds', '2')
       .field('coloresAdicionalesIds', '3')
@@ -244,6 +256,23 @@ describe('POST /api/perritos', () => {
 
     expect(response.status).toBe(201);
     expect(response.body.data.id).toBe(7);
+  });
+
+  it('400 si falta un campo descriptivo obligatorio', async () => {
+    const response = await request(appCon())
+      .post('/api/perritos')
+      .set('Idempotency-Key', 'clave-sin-sexo-123')
+      .field('nombre', 'Luna')
+      .field('colorPrincipalId', '1')
+      .field('etapaVida', 'adulto')
+      .field('tamano', 'mediano')
+      .field('longitudPelaje', 'corto')
+      .field('patronPelajeId', '2')
+      .field('latitud', '25.1')
+      .field('longitud', '-100.2')
+      .attach('foto', PNG, 'foto.png');
+
+    expect(response.status).toBe(400);
   });
 
   it('400 si un color adicional repite el principal (campos individuales)', async () => {
@@ -260,7 +289,7 @@ describe('POST /api/perritos', () => {
     expect(response.status).toBe(400);
   });
 
-  it('reenvía los campos descriptivos opcionales al repositorio', async () => {
+  it('reenvía los campos descriptivos al repositorio', async () => {
     const crear = vi.fn(async () => ({ perrito: { ...perrito, id: 7 }, replay: false }));
     const app = appCon(repo({ crear }));
 
@@ -268,6 +297,7 @@ describe('POST /api/perritos', () => {
       .post('/api/perritos')
       .set('Idempotency-Key', 'clave-opcionales-123')
       .field('nombre', 'Luna')
+      .field('razaId', '2')
       .field('colorPrincipalId', '1')
       .field('sexo', 'hembra')
       .field('etapaVida', 'cachorro')

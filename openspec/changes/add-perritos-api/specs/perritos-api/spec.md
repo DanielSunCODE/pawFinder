@@ -16,7 +16,7 @@ El API SHALL devolver el listado de perritos con sus colores, permitiendo filtra
 - **THEN** solo se devuelven los perritos que tienen ese color, y el filtro se aplica en la consulta SQL (no en el navegador)
 
 ### Requirement: Ver el detalle de un perrito
-El API SHALL devolver un perrito por su identificador, incluyendo raza, color principal, hasta dos colores adicionales y los campos descriptivos del esquema (sexo, etapa de vida, tamaño, longitud de pelaje, patrón de pelaje, color de ojos y marcas distintivas), usando `null` cuando no se conocen; SHALL responder con un error entendible cuando no existe.
+El API SHALL devolver un perrito por su identificador, incluyendo raza, color de ojos, color principal, hasta dos colores adicionales y sus campos descriptivos obligatorios (sexo, etapa de vida, tamaño, longitud de pelaje y patrón de pelaje); el único campo que puede ser `null` son las marcas distintivas. SHALL responder con un error entendible cuando no existe.
 
 #### Scenario: Perrito existente
 - **WHEN** se solicita `GET /api/perritos/{id}` con un id válido que existe
@@ -31,19 +31,23 @@ El API SHALL devolver un perrito por su identificador, incluyendo raza, color pr
 - **THEN** responde 400 con un mensaje entendible
 
 ### Requirement: Registrar un perrito con validación en el servidor
-El registro SHALL recibir multipart con los datos y la foto, y SHALL validar en el servidor que el nombre no esté vacío, que haya exactamente un color principal, que los colores adicionales sean de 0 a 2 sin repetir ni incluir el principal, y que latitud y longitud estén en rango; la raza es opcional. Además SHALL aceptar los campos descriptivos opcionales del esquema (sexo, etapa de vida, tamaño, longitud de pelaje, patrón de pelaje, color de ojos y marcas distintivas), validándolos contra sus listas fijas, y SHALL guardarlos y devolverlos en la respuesta.
+El registro SHALL recibir multipart con los datos y la foto, y SHALL validar en el servidor que el nombre no esté vacío; que estén presentes la raza, el color de ojos y los descriptivos obligatorios (sexo, etapa de vida, tamaño, longitud de pelaje y patrón de pelaje), validándolos contra sus listas fijas; que haya exactamente un color principal; que los colores adicionales sean de 0 a 2 sin repetir ni incluir el principal; y que latitud y longitud estén en rango. El único campo aceptado como opcional son las marcas distintivas. La raza se elige del catálogo, con "Sin raza definida / Criollo" para el caso de no conocerla.
 
 #### Scenario: Registro válido
-- **WHEN** se envía un registro con nombre, un color principal, 0 a 2 colores adicionales válidos, latitud/longitud y una foto JPG, PNG o WEBP
+- **WHEN** se envía un registro con nombre, raza, color de ojos, los descriptivos obligatorios, un color principal, 0 a 2 colores adicionales válidos, latitud/longitud y una foto JPG, PNG o WEBP
 - **THEN** responde 201 con el perrito creado
 
-#### Scenario: Registro con campos descriptivos
-- **WHEN** se envían sexo, etapa de vida, tamaño, longitud de pelaje, patrón de pelaje, color de ojos o marcas distintivas válidos
-- **THEN** responde 201 y el perrito guardado y devuelto incluye esos campos
+#### Scenario: Falta un campo obligatorio
+- **WHEN** se omite la raza, el color de ojos, el sexo, la etapa de vida, el tamaño, la longitud de pelaje o el patrón de pelaje
+- **THEN** responde 400 con el detalle del campo faltante
 
-#### Scenario: Campo descriptivo fuera de las listas
-- **WHEN** un campo descriptivo trae un valor que no está en su lista fija (por ejemplo, un sexo distinto de macho/hembra)
+#### Scenario: Campo fuera de las listas
+- **WHEN** un campo trae un valor que no está en su lista fija (por ejemplo, un sexo distinto de macho/hembra)
 - **THEN** responde 400 con el detalle del campo inválido
+
+#### Scenario: Marcas distintivas opcionales
+- **WHEN** se omiten las marcas distintivas
+- **THEN** responde 201 y el perrito las devuelve en `null`
 
 #### Scenario: Nombre vacío
 - **WHEN** el nombre está vacío o son solo espacios
@@ -106,4 +110,4 @@ Los endpoints del dominio SHALL estar documentados en OpenAPI generado desde los
 
 #### Scenario: Revisar el registro en Swagger UI
 - **WHEN** se abre `/api/docs` y se expande `POST /api/perritos`
-- **THEN** el cuerpo muestra los campos `nombre`, `razaId`, `colorPrincipalId`, `coloresAdicionalesIds`, los descriptivos opcionales (`sexo`, `etapaVida`, `tamano`, `longitudPelaje`, `patronPelajeId`, `colorOjosId`, `marcasDistintivas`), `latitud`, `longitud` y `foto` (binaria), además del encabezado `Idempotency-Key`
+- **THEN** el cuerpo muestra los campos `nombre`, `razaId`, `colorPrincipalId`, `coloresAdicionalesIds`, los descriptivos obligatorios (`sexo`, `etapaVida`, `tamano`, `longitudPelaje`, `patronPelajeId`, `colorOjosId`) y `marcasDistintivas` (opcional), `latitud`, `longitud` y `foto` (binaria), además del encabezado `Idempotency-Key`

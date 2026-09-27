@@ -12,15 +12,15 @@ export interface PerritoApi {
   nombre: string;
   fotoUrl: string;
   miniaturaUrl: string;
-  raza: { id: number; nombre: string } | null;
+  raza: { id: number; nombre: string };
   colorPrincipal: ColorApi;
   coloresAdicionales: ColorApi[];
-  sexo: string | null;
-  etapaVida: string | null;
-  tamano: string | null;
-  longitudPelaje: string | null;
-  patronPelaje: { id: number; nombre: string } | null;
-  colorOjos: ColorApi | null;
+  sexo: string;
+  etapaVida: string;
+  tamano: string;
+  longitudPelaje: string;
+  patronPelaje: { id: number; nombre: string };
+  colorOjos: ColorApi;
   marcasDistintivas: string | null;
   latitud: number;
   longitud: number;
@@ -53,24 +53,15 @@ export function aPerritoApi(registro: PerritoRegistro, config: AppConfig): Perri
     nombre: registro.nombre,
     fotoUrl,
     miniaturaUrl: fotoUrl,
-    raza:
-      registro.razaId !== null && registro.razaNombre !== null
-        ? { id: registro.razaId, nombre: registro.razaNombre }
-        : null,
+    raza: { id: registro.razaId, nombre: registro.razaNombre },
     colorPrincipal: principal ? colorApi(principal) : SIN_COLOR,
     coloresAdicionales: adicionales.map(colorApi),
     sexo: registro.sexo,
     etapaVida: registro.etapaVida,
     tamano: registro.tamano,
     longitudPelaje: registro.longitudPelaje,
-    patronPelaje:
-      registro.patronPelajeId !== null && registro.patronPelajeNombre !== null
-        ? { id: registro.patronPelajeId, nombre: registro.patronPelajeNombre }
-        : null,
-    colorOjos:
-      registro.colorOjosId !== null && registro.colorOjosNombre !== null
-        ? colorApi({ id: registro.colorOjosId, nombre: registro.colorOjosNombre })
-        : null,
+    patronPelaje: { id: registro.patronPelajeId, nombre: registro.patronPelajeNombre },
+    colorOjos: colorApi({ id: registro.colorOjosId, nombre: registro.colorOjosNombre }),
     marcasDistintivas: registro.marcasDistintivas,
     latitud: registro.latitud,
     longitud: registro.longitud,

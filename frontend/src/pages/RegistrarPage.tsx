@@ -205,8 +205,7 @@ export function RegistrarPage() {
         <h1>Registrar perrito</h1>
       </div>
       <p className={estilos.intro}>
-        Los campos con <span className={estilos.obligatorio}>*</span> son obligatorios. Si no sabes algo, déjalo en
-        «No sé». La fecha se guarda sola.
+        Los campos con <span className={estilos.obligatorio}>*</span> son obligatorios. La fecha se guarda sola.
       </p>
 
       <section className={estilos.seccion} id="campo-foto">
@@ -271,6 +270,7 @@ export function RegistrarPage() {
           opciones={OPCIONES_SEXO}
           valor={datos.sexo}
           alCambiar={(valor) => actualizar('sexo', valor)}
+          opcional={false}
           error={errores.sexo}
         />
 
@@ -280,6 +280,7 @@ export function RegistrarPage() {
           opciones={OPCIONES_ETAPA}
           valor={datos.etapaVida}
           alCambiar={(valor) => actualizar('etapaVida', valor)}
+          opcional={false}
           error={errores.etapaVida}
         />
       </section>
@@ -295,6 +296,7 @@ export function RegistrarPage() {
           opciones={OPCIONES_TAMANO}
           valor={datos.tamano}
           alCambiar={(valor) => actualizar('tamano', valor)}
+          opcional={false}
           error={errores.tamano}
         />
 
@@ -304,20 +306,25 @@ export function RegistrarPage() {
           opciones={OPCIONES_PELAJE}
           valor={datos.longitudPelaje}
           alCambiar={(valor) => actualizar('longitudPelaje', valor)}
+          opcional={false}
           error={errores.longitudPelaje}
         />
 
         <div className={estilos.campo} id="campo-patronPelajeId">
           <label htmlFor="patron" className={estilos.etiqueta}>
-            Patrón del pelaje
+            Patrón del pelaje <span className={estilos.obligatorio}>*</span>
           </label>
           <select
             id="patron"
-            className={clases(estilos.entrada, 'select-flecha border-borde-fuerte pr-10')}
+            className={clases(
+              estilos.entrada,
+              'select-flecha pr-10',
+              errores.patronPelajeId ? 'border-error' : 'border-borde-fuerte',
+            )}
             value={datos.patronPelajeId ?? ''}
             onChange={(e) => elegirPatron(e.target.value ? Number(e.target.value) : null)}
           >
-            <option value="">No sé</option>
+            {datos.patronPelajeId === null && <option value="">Elige un patrón</option>}
             {patrones.map((patron) => (
               <option key={patron.id} value={patron.id}>
                 {patron.nombre}
@@ -348,6 +355,7 @@ export function RegistrarPage() {
           opciones={coloresOjos.map((color) => ({ valor: color.id, etiqueta: color.nombre, hex: color.hex ?? null }))}
           valor={datos.colorOjosId}
           alCambiar={(valor) => actualizar('colorOjosId', valor)}
+          opcional={false}
           error={errores.colorOjosId}
         />
 

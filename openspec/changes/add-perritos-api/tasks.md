@@ -32,11 +32,12 @@
 
 ## 6. Campos completos del esquema `perros`
 
-- [x] 6.1 Esquema Zod del registro con los descriptivos opcionales (`sexo`, `etapaVida`, `tamano`, `longitudPelaje`, `patronPelajeId`, `colorOjosId`, `marcasDistintivas`)
+- [x] 6.1 Esquema Zod del registro: obligatorios `razaId`, `colorOjosId`, `sexo`, `etapaVida`, `tamano`, `longitudPelaje`, `patronPelajeId`; único opcional `marcasDistintivas`
 - [x] 6.2 Repositorio: JOIN a `patrones_pelaje` y `colores_ojos`, y `INSERT`/`SELECT` con todas las columnas
 - [x] 6.3 Mapper y OpenAPI (`Perrito` y `SubidaPerrito`) con los campos descriptivos
-- [x] 6.4 Frontend: enviar los campos en el multipart de `crearPerrito`
-- [x] 6.5 Pruebas de registro con campos descriptivos y de rechazo de valores inválidos
+- [x] 6.4 Frontend: validar los obligatorios, marcar `*` y enviarlos en el multipart de `crearPerrito`
+- [x] 6.5 Migraciones `005`/`006` que alinean la base (obligatorios `NOT NULL`)
+- [x] 6.6 Pruebas de registro con campos descriptivos, faltantes y valores inválidos
 
 ## 7. Verificación
 

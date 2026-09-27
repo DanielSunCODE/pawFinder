@@ -11,17 +11,17 @@ export interface ColorRegistro {
 export interface PerritoRegistro {
   id: number;
   nombre: string;
-  razaId: number | null;
-  razaNombre: string | null;
-  sexo: string | null;
-  etapaVida: string | null;
-  tamano: string | null;
-  longitudPelaje: string | null;
+  razaId: number;
+  razaNombre: string;
+  sexo: string;
+  etapaVida: string;
+  tamano: string;
+  longitudPelaje: string;
   marcasDistintivas: string | null;
-  patronPelajeId: number | null;
-  patronPelajeNombre: string | null;
-  colorOjosId: number | null;
-  colorOjosNombre: string | null;
+  patronPelajeId: number;
+  patronPelajeNombre: string;
+  colorOjosId: number;
+  colorOjosNombre: string;
   latitud: number;
   longitud: number;
   fechaRegistro: string;
@@ -31,14 +31,14 @@ export interface PerritoRegistro {
 
 export interface NuevoPerritoGuardado {
   nombre: string;
-  razaId: number | null;
-  sexo: string | null;
-  etapaVida: string | null;
-  tamano: string | null;
-  longitudPelaje: string | null;
+  razaId: number;
+  sexo: string;
+  etapaVida: string;
+  tamano: string;
+  longitudPelaje: string;
   marcasDistintivas: string | null;
-  patronPelajeId: number | null;
-  colorOjosId: number | null;
+  patronPelajeId: number;
+  colorOjosId: number;
   colorPrincipalId: number;
   coloresAdicionalesIds: number[];
   latitud: number;
@@ -82,17 +82,17 @@ interface FilaPerrito extends RowDataPacket {
   longitud: string | number;
   fecha_registro: Date | string;
   ruta_imagen: string;
-  id_raza: number | null;
-  raza: string | null;
-  sexo: string | null;
-  etapa_vida: string | null;
-  tamano: string | null;
-  longitud_pelaje: string | null;
+  id_raza: number;
+  raza: string;
+  sexo: string;
+  etapa_vida: string;
+  tamano: string;
+  longitud_pelaje: string;
   marcas_distintivas: string | null;
-  id_patron: number | null;
-  patron: string | null;
-  id_color_ojo: number | null;
-  color_ojo: string | null;
+  id_patron: number;
+  patron: string;
+  id_color_ojo: number;
+  color_ojo: string;
   id_color: number | null;
   color: string | null;
   es_dominante: number | null;
@@ -271,7 +271,16 @@ export function createPerritosRepository(pool: Pool): PerritosRepository {
           if (existente) return { perrito: existente, replay: true };
         }
         if (esCodigo(error, 'ER_NO_REFERENCED_ROW_2')) {
-          throw new HttpError(400, 'La raza o el color indicado no existe.');
+          throw new HttpError(
+            400,
+            'La raza, el color, el patrón de pelaje o el color de ojos indicado no existe.',
+          );
+        }
+        if (esCodigo(error, 'ER_BAD_NULL_ERROR')) {
+          throw new HttpError(400, 'Falta un dato obligatorio del registro.');
+        }
+        if (esCodigo(error, 'ER_DATA_TOO_LONG')) {
+          throw new HttpError(400, 'Uno de los textos del registro es demasiado largo.');
         }
         throw error;
       } finally {

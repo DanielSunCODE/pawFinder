@@ -26,14 +26,15 @@ export const datosPerritoNuevoSchema = z
       .trim()
       .min(1, 'El nombre no puede estar vacío.')
       .max(60, 'El nombre no puede pasar de 60 caracteres.'),
-    razaId: z.number().int().positive().nullable().default(null),
-    // Campos descriptivos opcionales (null = "no se sabe").
-    sexo: z.enum(SEXOS).nullable().default(null),
-    etapaVida: z.enum(ETAPAS_VIDA).nullable().default(null),
-    tamano: z.enum(TAMANOS).nullable().default(null),
-    longitudPelaje: z.enum(LONGITUDES_PELAJE).nullable().default(null),
-    patronPelajeId: z.number().int().positive().nullable().default(null),
-    colorOjosId: z.number().int().positive().nullable().default(null),
+    razaId: z.number().int().positive(),
+    // Campos descriptivos obligatorios.
+    sexo: z.enum(SEXOS),
+    etapaVida: z.enum(ETAPAS_VIDA),
+    tamano: z.enum(TAMANOS),
+    longitudPelaje: z.enum(LONGITUDES_PELAJE),
+    patronPelajeId: z.number().int().positive(),
+    colorOjosId: z.number().int().positive(),
+    // Único campo opcional (null = no se conocen).
     marcasDistintivas: textoOpcional.default(null),
     // Colores de pelo.
     colorPrincipalId: z.number().int().positive(),

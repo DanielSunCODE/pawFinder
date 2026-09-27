@@ -53,7 +53,7 @@ backend/
     index.ts                   Arranque (carga .env y valida config)
     config/env.ts              Esquemas Zod (loadEnv / loadDbEnv)
     db/pool.ts                 Pool mysql2 + TLS Aiven
-    storage/                   StorageDriver: local, s3, validación de imagen
+    storage/                   StorageDriver: local, s3, validación y compresión de imagen
     schemas/perrito.ts         Esquemas Zod del dominio
     repositories/              SQL declarativo (JOIN, agregación, idempotencia)
     mappers/                   Transformaciones funcionales (row → API)
@@ -114,3 +114,7 @@ openspec/                      Specs y cambios
   punto extra con S3, sin cambiar el código de los endpoints.
 - **Leaflet + OpenStreetMap:** sin llave de API, un riesgo menos y nada que
   filtrar del repositorio.
+- **Compresión de imágenes:** al registrar, la foto validada se reescala (lado
+  mayor `IMAGE_MAX_DIMENSION`) y se reencodea con `sharp` (`IMAGE_OUTPUT_FORMAT`,
+  `IMAGE_QUALITY`) antes de guardarse; se descartan los metadatos EXIF, incluido
+  el GPS. Si una imagen no se puede procesar, se guarda la original ya validada.

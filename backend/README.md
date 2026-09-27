@@ -40,7 +40,10 @@ Todas se definen en `backend/.env`. Ver `backend/.env.example` para el listado c
 | `DB_SSL` / `DB_SSL_CA` | `false` / — | TLS para Aiven. `DB_SSL_CA` acepta la ruta a un `.pem` o el PEM pegado entre comillas dobles. |
 | `STORAGE_DRIVER` | `local` | `local` o `s3`. |
 | `RUTA_IMAGENES` | `C:/Users/tu_usuario/pawfinder-imagenes` | Directorio fuera del proyecto (modo local). |
-| `IMAGE_MAX_BYTES` | `5242880` | Tamaño máximo por imagen. |
+| `IMAGE_MAX_BYTES` | `5242880` | Tamaño máximo por imagen (subida). |
+| `IMAGE_MAX_DIMENSION` | `1600` | Lado mayor al que se reescala la foto. |
+| `IMAGE_QUALITY` | `80` | Calidad (1–100) de la imagen comprimida. |
+| `IMAGE_OUTPUT_FORMAT` | `webp` | `webp` o `jpeg`: formato de salida comprimido. |
 | `AWS_*` | — | Credenciales S3 (solo si `STORAGE_DRIVER=s3`). |
 | `PUBLIC_BASE_URL` | `http://localhost:3000` | URL pública del backend. |
 | `OPENAPI_SERVER_URL` | `http://localhost:3000` | URL que Swagger UI muestra como servidor del API. |

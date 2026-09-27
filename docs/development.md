@@ -17,6 +17,28 @@ npm run dev            # backend (http://localhost:3000) + frontend (http://loca
 También puedes levantarlos por separado con `npm run dev:backend` y
 `npm run dev:frontend`.
 
+## Verificación automática (CI y pruebas)
+
+El pipeline de **GitHub Actions** (`.github/workflows/ci.yml`) corre en cada
+`push` y `pull request` a `main`/`dev`: instala con `npm ci` y ejecuta, para
+backend y frontend, `lint`, `typecheck`, `test` y `build`. Corre directo en el
+runner con `actions/setup-node` (versión de `.nvmrc`), **sin Docker ni
+secretos**: las pruebas usan dobles y no tocan base de datos ni red.
+
+Antes de subir un cambio, corre el mismo conjunto en local:
+
+```bash
+npm run ci        # lint + tipos + pruebas + build (ambos paquetes)
+```
+
+Por separado: `npm run lint`, `npm run typecheck`, `npm run test` y
+`npm run build`.
+
+- **Unitarias:** `backend/tests/*.test.ts` y `frontend/src/**/*.test.ts`.
+- **Integrales del API:** `backend/tests/perritos.test.ts` con Supertest sobre
+  `createApp` y repositorio/almacenamiento simulados.
+- **Versión de Node:** `.nvmrc` (22), compartida por CI y por el campo `engines`.
+
 ## Estructura y responsabilidades
 
 | Carpeta | Rol | Comandos |

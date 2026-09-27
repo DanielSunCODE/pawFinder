@@ -87,6 +87,9 @@ frontend usa `frontend/.env.local` (copiado de `frontend/.env.example`).
 | `STORAGE_DRIVER` | `local` | `local` o `s3`. |
 | `RUTA_IMAGENES` | `C:/Users/tu_usuario/pawfinder-imagenes` | Carpeta **fuera del proyecto** (modo local). |
 | `IMAGE_MAX_BYTES` | `5242880` | Tamaño máximo por imagen. |
+| `IMAGE_MAX_DIMENSION` | `1600` | Lado mayor al que se reescala la foto subida. |
+| `IMAGE_QUALITY` | `80` | Calidad (1–100) de la compresión. |
+| `IMAGE_OUTPUT_FORMAT` | `webp` | Formato de salida (`webp` o `jpeg`). |
 | `AWS_REGION` / `AWS_S3_BUCKET` / `AWS_ACCESS_KEY_ID` / `AWS_SECRET_ACCESS_KEY` | — | Solo si `STORAGE_DRIVER=s3`. |
 | `PUBLIC_BASE_URL` | `http://localhost:3000` | URL pública del API. |
 | `OPENAPI_SERVER_URL` | `http://localhost:3000` | URL que muestra Swagger UI. |
@@ -128,6 +131,26 @@ npm run dev:frontend
 - OpenAPI JSON: `http://localhost:3000/api/openapi.json`
 - App web: `http://localhost:5173`
 
+### Verificación automática (pruebas y CI)
+
+Antes de subir un cambio, corre en local **el mismo conjunto de chequeos** que el
+pipeline:
+
+```bash
+npm run ci        # lint + tipos + pruebas + build (backend y frontend)
+```
+
+También se pueden correr por separado: `npm run lint`, `npm run typecheck`,
+`npm run test` y `npm run build`.
+
+El repositorio tiene **integración continua** en GitHub Actions
+(`.github/workflows/ci.yml`): en cada `push` y `pull request` a `main` o `dev`
+instala con `npm ci` y corre, para backend y frontend, `lint`, `typecheck`,
+`test` y `build`. Corre directo en el runner con `actions/setup-node` (versión de
+`.nvmrc`), **sin Docker, sin service containers y sin secretos**: las pruebas usan
+dobles (no tocan base de datos ni red). El pipeline falla (rojo) si cualquier paso
+falla.
+
 ## 7. Probar desde un celular en la misma red
 
 Los navegadores solo dan **cámara y ubicación** en `https` o `localhost`. Desde
@@ -164,7 +187,9 @@ npm run dev:red --workspace @pawfinder/frontend
 
 Todos los endpoints están documentados y se pueden probar desde `/api/docs`.
 El registro es **idempotente**: reintentar con la misma `Idempotency-Key`
-devuelve el mismo perrito y no crea otro.
+devuelve el mismo perrito y no crea otro. La foto se valida por contenido y se
+**comprime** (reescalada a `IMAGE_MAX_DIMENSION` y reencodeada en
+`IMAGE_OUTPUT_FORMAT`) antes de guardarse.
 
 ## 9. Capturas de pantalla
 

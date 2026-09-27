@@ -35,6 +35,11 @@ const envSchema = dbEnvSchema
       .positive()
       .default(5 * 1024 * 1024),
 
+    // Compresión de las fotos subidas.
+    IMAGE_MAX_DIMENSION: z.coerce.number().int().positive().default(1600),
+    IMAGE_QUALITY: z.coerce.number().int().min(1).max(100).default(80),
+    IMAGE_OUTPUT_FORMAT: z.enum(['webp', 'jpeg']).default('webp'),
+
     AWS_REGION: z.string().optional(),
     AWS_S3_BUCKET: z.string().optional(),
     AWS_ACCESS_KEY_ID: z.string().optional(),

@@ -1,5 +1,13 @@
 import type { RequestHandler } from 'express';
-import type { ZodTypeAny } from 'zod';
+import type { ZodError, ZodTypeAny } from 'zod';
+
+/** Convierte los errores de Zod en detalles por campo para el contrato de error. */
+export function detallesDeZod(error: ZodError): { field: string; message: string }[] {
+  return error.issues.map((issue) => ({
+    field: issue.path.join('.') || '(cuerpo)',
+    message: issue.message,
+  }));
+}
 
 export function validateBody(schema: ZodTypeAny): RequestHandler {
   return (req, res, next) => {
@@ -9,10 +17,7 @@ export function validateBody(schema: ZodTypeAny): RequestHandler {
       res.status(400).json({
         error: {
           message: 'Revisa los datos enviados.',
-          details: result.error.issues.map((issue) => ({
-            field: issue.path.join('.') || '(cuerpo)',
-            message: issue.message,
-          })),
+          details: detallesDeZod(result.error),
         },
       });
       return;

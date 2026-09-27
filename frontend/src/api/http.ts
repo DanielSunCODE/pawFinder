@@ -67,10 +67,17 @@ export function crearApiHttp(urlBase: string): ApiPerritos {
     obtenerPerrito: (id: Id) => pedir(`/perritos/${encodeURIComponent(id)}`),
 
     crearPerrito(datos, foto, claveIdempotencia) {
-      // multipart/form-data: un campo "datos" con JSON y un campo "foto" con el archivo.
-      // No ponemos Content-Type a mano: el navegador lo agrega con el "boundary" correcto.
+      // multipart/form-data con campos individuales + la foto. No ponemos
+      // Content-Type a mano: el navegador lo agrega con el "boundary" correcto.
       const formulario = new FormData()
-      formulario.append('datos', JSON.stringify(datos))
+      formulario.append('nombre', datos.nombre)
+      if (datos.razaId !== null) formulario.append('razaId', String(datos.razaId))
+      formulario.append('colorPrincipalId', String(datos.colorPrincipalId))
+      for (const id of datos.coloresAdicionalesIds) {
+        formulario.append('coloresAdicionalesIds', String(id))
+      }
+      formulario.append('latitud', String(datos.latitud))
+      formulario.append('longitud', String(datos.longitud))
       formulario.append('foto', foto, `foto.${extensionDe(foto.type)}`)
       return pedir(
         '/perritos',

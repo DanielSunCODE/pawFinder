@@ -50,7 +50,13 @@ Todas se definen en `backend/.env`. Ver `backend/.env.example` para el listado c
 | Método | Ruta | Descripción |
 |---|---|---|
 | GET | `/api/health` | Estado del servicio. |
+| GET | `/api/perritos` | Listar/filtrar perritos (`busqueda`, `colorId`, `razaId`). |
+| GET | `/api/perritos/{id}` | Detalle de un perrito con sus colores. |
+| POST | `/api/perritos` | Registrar perrito (multipart `datos` + `foto`, header `Idempotency-Key`). |
 | GET | `/api/perritos/{id}/foto` | Foto del perrito, servida por el backend (nunca expone carpeta ni bucket). |
+| GET | `/api/razas` | Catálogo de razas. |
+| GET | `/api/colores` | Catálogo de colores. |
+| GET | `/api/estadisticas` | Conteo agregado en SQL (total y por color). |
 | GET | `/api/openapi.json` | Documento OpenAPI 3.1 en JSON. |
 | GET | `/api/docs` | Interfaz Swagger UI para explorar y probar los endpoints. |
 

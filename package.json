@@ -13,6 +13,7 @@
   ],
   "scripts": {
     "install:all": "npm install",
+    "dev": "concurrently -n backend,frontend -c blue,magenta \"npm run dev:backend\" \"npm run dev:frontend\"",
     "dev:backend": "npm run dev --workspace @pawfinder/backend",
     "dev:frontend": "npm run dev --workspace @pawfinder/frontend",
     "build:backend": "npm run build --workspace @pawfinder/backend",
@@ -23,5 +24,8 @@
     "db:backup": "bash database/scripts/backup.sh",
     "db:restore": "bash database/scripts/restore.sh",
     "db:typecheck": "tsc -p database/tsconfig.json"
+  },
+  "devDependencies": {
+    "concurrently": "^9.1.0"
   }
 }

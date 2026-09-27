@@ -109,6 +109,13 @@ frontend usa `frontend/.env.local` (copiado de `frontend/.env.example`).
 ## 6. Ejecución
 
 ```bash
+# Levanta backend y frontend a la vez (una sola terminal)
+npm run dev
+```
+
+Si prefieres terminales separadas:
+
+```bash
 # Backend (terminal 1)  →  http://localhost:3000   (docs en /api/docs)
 npm run dev:backend
 
@@ -143,17 +150,19 @@ npm run dev:red --workspace @pawfinder/frontend
 | Método | Ruta | Estado | Descripción |
 |---|---|---|---|
 | GET | `/api/health` | ✅ | Estado del servicio. |
+| GET | `/api/perritos` | ✅ | Listar/filtrar perritos (`busqueda`, `colorId`, `razaId`), resuelto en SQL. |
+| GET | `/api/perritos/{id}` | ✅ | Detalle de un perrito con sus colores. |
+| POST | `/api/perritos` | ✅ | Registrar perrito (multipart: `datos` + `foto`, header `Idempotency-Key`). |
 | GET | `/api/perritos/{id}/foto` | ✅ | Foto del perrito servida por el backend (no expone carpeta ni bucket). |
+| GET | `/api/razas` | ✅ | Catálogo de razas. |
+| GET | `/api/colores` | ✅ | Catálogo de colores. |
+| GET | `/api/estadisticas` | ✅ | Conteo agregado en SQL (total y perritos por color). |
 | GET | `/api/openapi.json` | ✅ | Documento OpenAPI 3.1 en JSON. |
 | GET | `/api/docs` | ✅ | Interfaz Swagger UI. |
-| GET | `/api/perritos` | ⏳ | Listar/filtrar perritos (filtros por búsqueda y color). |
-| GET | `/api/perritos/{id}` | ⏳ | Detalle de un perrito. |
-| POST | `/api/perritos` | ⏳ | Registrar perrito (multipart: `datos` + `foto`, header `Idempotency-Key`). |
-| GET | `/api/razas` | ⏳ | Catálogo de razas. |
-| GET | `/api/colores` | ⏳ | Catálogo de colores. |
 
-✅ implementado · ⏳ planeado (los consume el frontend; el contrato se documenta en
-Swagger conforme se implementan, ver `backend/AGENTS.md`).
+Todos los endpoints están documentados y se pueden probar desde `/api/docs`.
+El registro es **idempotente**: reintentar con la misma `Idempotency-Key`
+devuelve el mismo perrito y no crea otro.
 
 ## 9. Capturas de pantalla
 
@@ -181,31 +190,34 @@ El proyecto mezcla a propósito varios paradigmas. La ubicación concreta del
 código está en [`docs/architecture.md`](./docs/architecture.md); el resumen:
 
 - **Declarativo** — SQL en `database/migrations/` y `database/seeds/`, y las
-  consultas del API (`backend/src/routes/photos.ts`), además de la interfaz
-  (HTML/CSS + JSX que describen *qué* se ve). El filtrado, ordenamiento y
-  agregación viven en SQL; **no** se traen todos los registros para filtrarlos
+  consultas del API en `backend/src/repositories/perritosRepository.ts` (JOIN de
+  perrito + raza + colores, y `GROUP BY` para las estadísticas), además de la
+  interfaz (HTML/CSS + JSX que describen *qué* se ve). El filtrado, ordenamiento
+  y agregación viven en SQL; **no** se traen todos los registros para filtrarlos
   con un ciclo.
 - **Imperativo** — arranque y orquestación en `backend/src/app.ts` y
   `backend/src/index.ts`; manejadores de eventos y efectos en el frontend.
 - **Orientado a objetos** — la abstracción `StorageDriver` con sus drivers
   (`backend/src/storage/`), la clase `ErrorApi` (`frontend/src/api/errores.ts`) y
   los componentes y la clase `HttpError` del backend (`backend/src/middleware/errorHandler.ts`).
-- **Funcional** — la construcción de la query string en
-  `frontend/src/api/http.ts` (`Object.entries(...).filter(...).map(...)`), que
-  **no muta** la entrada y **no usa ciclos explícitos**; y los mapeos de datos del
-  frontend. Se ampliará en el cambio de dominio (mappers de perritos).
+- **Funcional** — el mapper de perritos
+  (`backend/src/mappers/perritoMapper.ts`) separa el color principal de los
+  adicionales con `find`/`filter`/`map` y el repositorio agrupa las filas del
+  JOIN con `reduce` (`backend/src/repositories/perritosRepository.ts`), sin mutar
+  la entrada ni usar ciclos explícitos; en el frontend, la query string en
+  `frontend/src/api/http.ts`. Se ampliará con más mappers en el cambio de dominio.
 
 ### Idempotencia del registro
-
-Diseño (el endpoint de registro se implementa en el cambio de dominio):
 
 - El formulario **genera una clave de idempotencia (UUID) al abrirse** y la envía
   en el encabezado `Idempotency-Key`.
 - La tabla **`idempotencia`** (`database/migrations/003_idempotency.sql`) guarda
   `idempotency_key` como clave primaria → `id_perro`.
 - Ante un doble envío, el backend **devuelve el mismo `id` y el mismo resultado**
-  (no crea otro perrito y **no** responde "error: duplicado").
-- La prueba del doble envío se agregará junto con el endpoint.
+  (no crea otro perrito y **no** responde "error: duplicado"). Si dos envíos
+  concurrentes comparten clave, el `UNIQUE` resuelve la carrera y se devuelve el
+  registro existente.
+- La prueba del doble envío está en `backend/tests/perritos.test.ts`.
 
 ## 12. Despliegue (punto extra)
 

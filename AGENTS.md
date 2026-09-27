@@ -40,6 +40,7 @@ npm install
 npm run db:migrate      # aplicar migraciones
 npm run db:seed         # catálogos + perritos de prueba (con foto)
 npm run db:reset        # recrear base local desde cero
+npm run dev             # backend + frontend a la vez
 npm run dev:backend     # http://localhost:3000  (api docs en /api/docs)
 npm run dev:frontend    # http://localhost:5173
 npm run test:backend

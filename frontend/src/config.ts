@@ -22,9 +22,6 @@ export const config = {
   /** URL base de la API. En desarrollo se deja en /api y el proxy de Vite la reenvía al backend. */
   apiUrl: import.meta.env.VITE_API_URL || '/api',
 
-  /** Si es true, la app usa datos de prueba en memoria y no necesita backend. */
-  usarMocks: import.meta.env.VITE_USAR_MOCKS === 'true',
-
   mapa: {
     centro: leerCentro(import.meta.env.VITE_MAPA_CENTRO),
     zoom: Number(import.meta.env.VITE_MAPA_ZOOM) || 13,

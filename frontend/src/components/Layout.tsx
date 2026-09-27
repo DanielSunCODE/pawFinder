@@ -38,15 +38,6 @@ export function Layout() {
             {config.nombreApp}
           </Link>
 
-          {config.usarMocks && (
-            <span
-              className="rounded-full bg-aviso-suave px-2.5 py-0.5 text-xs font-bold whitespace-nowrap text-aviso-texto"
-              title="VITE_USAR_MOCKS=true: la app no está conectada al backend"
-            >
-              Datos de prueba
-            </span>
-          )}
-
           <nav className="ml-auto hidden items-center gap-1 md:flex" aria-label="Principal">
             <NavLink to="/" end className={claseEnlaceEscritorio}>
               Mapa

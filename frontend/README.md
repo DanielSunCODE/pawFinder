@@ -5,7 +5,9 @@ Pensada primero para celular (se usa en la calle) y adaptada a computadora.
 
 > Este documento cubre sólo el frontend. El `README.md` de la raíz del repositorio es el oficial
 > del proyecto; de aquí se pueden copiar las secciones del frontend.
-> El contrato con el backend está en [`../docs/contrato-api.md`](../docs/contrato-api.md).
+> El formato de respuestas del backend está en `openspec/changes/bootstrap-project/design.md`
+> (sección "Contrato de respuestas y errores"). `src/api/http.ts` acepta ese formato (`{ data }`,
+> `{ error: { message, details } }`) y también el de `contrato-api.md` (`{ error: { mensaje, campos } }`).
 
 ## Tecnologías y versiones exactas
 
@@ -21,17 +23,18 @@ Pensada primero para celular (se usa en la calle) y adaptada a computadora.
 | Leaflet / React Leaflet | 1.9.4 / 5.0.0 | Mapa (mosaicos de OpenStreetMap con respaldo automático, **sin llave de API**) |
 | lucide-react | 1.47.0 | Íconos |
 | @fontsource-variable/nunito | 5.3.0 | Tipografía (incluida en el proyecto, no depende de internet) |
-| Vitest | 5.0.1 | Pruebas |
+| Vitest | 5.0.2 | Pruebas |
 | oxlint | 1.85.0 | Revisión de estilo de código |
 
-Las versiones están fijas en `package.json` (sin `^`) y en `package-lock.json`. No se usa Docker.
+Las versiones están fijas en `package.json` (sin `^`) y en el `package-lock.json` **de la raíz**. No se usa Docker.
 
 ## Instalación
 
-Desde la raíz del repositorio:
+El repositorio es un monorepo con *npm workspaces* (`frontend`, `backend`, `database`): hay un solo
+`package-lock.json`, en la raíz, y las dependencias se instalan desde ahí.
 
 ```bash
-cd frontend
+# en la raíz del repositorio
 npm ci
 ```
 
@@ -48,23 +51,27 @@ cp .env.example .env.local
 copy .env.example .env.local
 ```
 
+El archivo `.env.local` va dentro de `frontend/`.
+
 ## Ejecutar
 
 ```bash
+# desde la raíz
+npm run dev:frontend
+# o desde frontend/
 npm run dev
 ```
 
 Abre <http://localhost:5173>.
 
-Con `VITE_USAR_MOCKS=true` (valor de ejemplo) la app usa **datos de prueba en memoria** y no necesita
-backend. En el encabezado aparece la etiqueta "Datos de prueba" para que no se confunda con datos reales.
+La app **necesita el backend** para mostrar datos: sin él, cada pantalla muestra
+"No pudimos conectar con el servidor" con un botón para reintentar.
 
 ### Conectarlo con el backend
 
-1. Levantar el backend (ver su sección del README).
-2. En `.env.local`: `VITE_USAR_MOCKS=false` y `BACKEND_URL` con la dirección del backend
-   (por ejemplo `http://localhost:3000`).
-3. Reiniciar `npm run dev`.
+1. Levantar el backend (`npm run dev:backend` desde la raíz).
+2. En `frontend/.env.local`, `BACKEND_URL` con la dirección del backend (por defecto `http://localhost:3000`).
+3. Reiniciar el servidor del frontend.
 
 El navegador siempre pide a `/api/...` y Vite reenvía esas peticiones a `BACKEND_URL` (proxy).
 Por eso **el backend debe exponer todos sus endpoints bajo `/api`** y no hace falta configurar CORS
@@ -75,7 +82,6 @@ en desarrollo.
 | Variable | Ejemplo | Qué hace |
 |---|---|---|
 | `VITE_API_URL` | `/api` | URL base de la API vista desde el navegador. Dejarla en `/api`. |
-| `VITE_USAR_MOCKS` | `true` | `true` = datos de prueba en memoria; `false` = backend real. |
 | `BACKEND_URL` | `http://localhost:3000` | A dónde reenvía el proxy de Vite las peticiones `/api`. Sólo lo lee `vite.config.ts`. |
 | `VITE_MAPA_CENTRO` | `19.4326,-99.1332` | Centro inicial del mapa (latitud,longitud). |
 | `VITE_MAPA_ZOOM` | `13` | Zoom inicial del mapa. |
@@ -124,7 +130,7 @@ tipo ahora piden llave y los están retirando.
 | `npm run dev:red` | Igual, con HTTPS y accesible desde otros dispositivos de la red |
 | `npm run build` | Revisa tipos y genera la versión de producción en `dist/` |
 | `npm run preview` | Sirve `dist/` para probar la versión de producción |
-| `npm test` | Pruebas automáticas (se agregan con el formulario) |
+| `npm test` | Pruebas de las reglas de validación |
 | `npm run lint` | Revisión de código |
 | `npm run typecheck` | Sólo revisión de tipos |
 
@@ -154,12 +160,15 @@ navegador. Caddy obtiene el certificado HTTPS automáticamente.
 - Los colores, la tipografía, los radios y las sombras están en `src/styles/global.css`, dentro de `@theme`.
   De ahí salen clases como `bg-primario`, `text-texto-suave`, `rounded-tarjeta` o `shadow-tarjeta`.
 - Los botones (`boton`, `boton--primario`, `boton--secundario`…) se definen una vez con `@apply`.
+- Las clases largas del formulario que se repiten están en `src/components/formulario/estilos.ts`.
+- Los pines y globos del mapa van en `src/components/mapa/mapa.css` (CSS normal), porque ese HTML lo
+  arma Leaflet y no se le pueden poner clases.
 
 ## Estructura
 
 ```
 frontend/
-├── index.html                Viewport responsivo, título
+├── index.html
 ├── vite.config.ts            Proxy /api y modo HTTPS para celular
 ├── .env.example              Variables de configuración (copiar a .env.local)
 └── src/
@@ -168,27 +177,72 @@ frontend/
     ├── config.ts             Lee las variables de entorno
     ├── api/
     │   ├── tipos.ts          Contrato con el backend (tipos de datos)
-    │   ├── http.ts           Cliente real (fetch) con URL base VITE_API_URL
-    │   ├── errores.ts        Errores → mensajes entendibles ("Falta la foto", no "Error 400")
-    │   ├── mock/             Datos de prueba en memoria
-    │   └── index.ts          Elige real o prueba según VITE_USAR_MOCKS
-    ├── pages/                Una pantalla por archivo (por ahora, esqueletos)
-    │   ├── MapaPage.tsx      /             Mapa con un pin por perrito
-    │   ├── ListaPage.tsx     /perritos     Lista con miniaturas
-    │   ├── DetallePage.tsx   /perritos/:id Detalle de un registro
-    │   └── RegistrarPage.tsx /registrar    Formulario
-    ├── components/           Encabezado, navegación y mensajes de estado
+    │   ├── http.ts           Llamadas al backend (fetch)
+    │   ├── errores.ts        Errores → mensajes entendibles
+    │   └── index.ts          Exporta `api`, lo único que usan las pantallas
+    ├── pages/                Una pantalla por archivo
+    │   ├── MapaPage.tsx      Mapa con un pin por perrito
+    │   ├── ListaPage.tsx     Lista con miniaturas y filtros
+    │   ├── DetallePage.tsx   Detalle de un registro
+    │   └── RegistrarPage.tsx Formulario
+    ├── components/           Piezas reutilizables (encabezado, tarjetas, mapa, campos del formulario)
+    ├── hooks/                useAsync (pedir datos), useValorRetrasado (esperar a que dejen de escribir)
+    ├── utils/                Validación, foto, idempotencia, reintentos, ubicación, formato
     └── styles/global.css     Tailwind: colores del tema (@theme), botones y medidas compartidas
 ```
 
 Las pantallas nunca llaman a `fetch` directamente: usan `api` de `src/api`. Cuando el backend cambie
 algo del contrato, sólo se toca `src/api/`.
 
+## Requisitos del enunciado que cubre el frontend
+
+| Requisito | Dónde |
+|---|---|
+| Foto: tomar con la cámara **o** subir; JPG, PNG o WEBP | `components/formulario/SelectorFoto.tsx`, `utils/imagen.ts` |
+| Nombre obligatorio (sólo espacios no cuenta) | `utils/validacion.ts` |
+| Raza de catálogo, opcional | `pages/RegistrarPage.tsx` (catálogo viene de `GET /api/razas`) |
+| Un color principal + 0 a 2 adicionales, sin repetir | `components/formulario/SelectorColores.tsx`, `utils/validacion.ts` |
+| Ubicación: la actual o moviendo el pin; se guardan latitud y longitud | `components/formulario/SelectorUbicacion.tsx` |
+| Fecha automática | La pone el backend; el frontend sólo la muestra |
+| Mapa con un pin por perrito; al tocarlo, foto, nombre y colores | `pages/MapaPage.tsx` |
+| Lista con foto en miniatura | `pages/ListaPage.tsx` |
+| Detalle de un registro | `pages/DetallePage.tsx` |
+| Errores entendibles ("Falta la foto", no "Error 400") | `api/errores.ts`, `utils/validacion.ts` |
+| Usable en celular | Diseño pensado primero para celular; navegación inferior |
+| Guardado idempotente (parte del frontend) | `utils/idempotencia.ts`, `pages/RegistrarPage.tsx`, `utils/reintentos.ts` |
+
+## Paradigmas en el frontend
+
+- **Declarativo.** Los componentes de React (JSX) y las clases de Tailwind describen *qué* se ve según el estado, no
+  *cómo* dibujarlo. Ejemplo: `ListaPage.tsx` dice "si hay error, muestra el error; si no hay datos,
+  muestra 'Cargando'; si no, muestra la cuadrícula"; React decide qué cambiar en la pantalla.
+  El filtrado de la lista también es declarativo: se *pide* a la API con parámetros y lo resuelve SQL.
+- **Funcional.** `utils/validacion.ts` → `validarRegistro`: cada regla es una función pura y los errores
+  se arman con `map` → `filter` → `reduce`, sin mutar los datos ni usar ciclos. `utils/transformaciones.ts`
+  → funciones puras como `coordenadasDe` (usa `map` para sacar las coordenadas de los pines). Hay pruebas que verifican
+  que `validarRegistro` no modifica lo que recibe.
+- **Imperativo.** `utils/imagen.ts` → `reducir`: pasos en orden sobre un canvas (crear, dibujar, exportar).
+  `utils/reintentos.ts`: un ciclo `for` que reintenta el envío. Ahí conviene el estilo imperativo porque
+  son secuencias de efectos (dibujar, esperar, volver a intentar).
+- **Orientado a objetos.** `api/errores.ts` → `class ErrorApi extends Error`: un error con estado HTTP y
+  errores por campo, que se distingue con `instanceof`.
+
+## Idempotencia del registro (lado del frontend)
+
+1. Al abrir el formulario se genera una clave única (UUID) — `RegistrarPage.tsx`, `useState(generarClaveIdempotencia)`.
+2. Cada envío manda esa clave en el encabezado `Idempotency-Key`.
+3. Si el envío falla por la red (sin respuesta, 502, 503, 504), se reintenta hasta 3 veces **con la misma clave**.
+4. Si el usuario presiona Enviar dos veces, el botón se deshabilita mientras se envía; pero la garantía real
+   es la clave: aunque llegaran dos peticiones, el backend devuelve el mismo perrito.
+
+Se eligió una clave generada al abrir el formulario (no una "clave natural" como nombre + ubicación) porque
+dos perritos distintos pueden llamarse igual y estar en el mismo lugar.
+
 ## Problemas comunes
 
 | Síntoma | Causa y solución |
 |---|---|
-| "No pudimos conectar con el servidor" | El backend no está corriendo, `BACKEND_URL` está mal, o `VITE_USAR_MOCKS=false` sin backend. |
+| "No pudimos conectar con el servidor" | El backend no está corriendo, o `BACKEND_URL` en `frontend/.env.local` está mal. |
 | "La ubicación sólo funciona si la página se abre con https" | Se abrió por `http://IP:5173`. Usar `npm run dev:red` y la dirección `https://`. |
 | El celular no abre la página | Misma red Wi-Fi; permitir Node.js en el firewall; usar la IP que muestra la terminal. |
 | El mapa se ve gris | No hay internet o la red bloquea `tile.openstreetmap.org`. |

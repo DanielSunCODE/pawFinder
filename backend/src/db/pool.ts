@@ -27,6 +27,9 @@ export function buildDbConfig(config: DbConfig): ConnectionOptions {
     user: config.DB_USER,
     password: config.DB_PASSWORD,
     database: config.DB_NAME,
+    // MySQL guarda los TIMESTAMP en UTC. Sin esto el driver interpreta el
+    // valor crudo como hora local del proceso y desfasa la fecha de registro.
+    timezone: 'Z',
   };
 
   if (!config.DB_SSL) {

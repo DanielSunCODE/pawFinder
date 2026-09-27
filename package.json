@@ -1,0 +1,21 @@
+{
+  "name": "pawfinder",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Registro de perritos de la calle - proyecto de Programacion logica y funcional",
+  "engines": {
+    "node": ">=20"
+  },
+  "workspaces": [
+    "backend",
+    "frontend",
+    "database"
+  ],
+  "scripts": {
+    "install:all": "npm install",
+    "dev:backend": "npm run dev --workspace @pawfinder/backend",
+    "dev:frontend": "npm run dev --workspace @pawfinder/frontend",
+    "build:backend": "npm run build --workspace @pawfinder/backend",
+    "test:backend": "npm run test --workspace @pawfinder/backend"
+  }
+}

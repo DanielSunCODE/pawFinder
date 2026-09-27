@@ -1,0 +1,6 @@
+{
+  "name": "@pawfinder/database",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Migraciones, seeds y scripts de la base de datos. Placeholder: el rol de DBA completa esta base."
+}

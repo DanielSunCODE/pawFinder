@@ -1,20 +1,20 @@
 ## 1. Estructura y tooling base
 
-- [ ] 1.1 Crear `package.json` raíz con npm workspaces (`frontend`, `backend`, `database`) y scripts `install:all`, `dev:backend`, `dev:frontend`
-- [ ] 1.2 Crear `.gitignore` (dependencias, builds, `.env`, llaves, imágenes de prueba), `.editorconfig` y `.env.example` raíz si aplica
-- [ ] 1.3 Crear la estructura de carpetas `frontend/`, `backend/`, `database/` y `docs/` según el árbol de `design.md`
-- [ ] 1.4 Crear los `package.json` de cada paquete con sus scripts y dependencias declaradas
+- [x] 1.1 Crear `package.json` raíz con npm workspaces (`frontend`, `backend`, `database`) y scripts `install:all`, `dev:backend`, `dev:frontend`
+- [x] 1.2 Crear `.gitignore` (dependencias, builds, `.env`, llaves, imágenes de prueba), `.editorconfig` y `.env.example` raíz si aplica
+- [x] 1.3 Crear la estructura de carpetas `frontend/`, `backend/`, `database/` y `docs/` según el árbol de `design.md`
+- [x] 1.4 Crear los `package.json` de cada paquete con sus scripts y dependencias declaradas
 
 ## 2. Backend foundation
 
-- [ ] 2.1 Configurar TypeScript del backend (`tsconfig.json`) y scripts `dev`, `build`, `test`
-- [ ] 2.2 Implementar `src/config/env.ts` con Zod: validar variables obligatorias y fallar con mensaje claro sin exponer valores
-- [ ] 2.3 Implementar `src/app.ts` y `src/index.ts` con Express, JSON, CORS configurable y arranque del servidor
-- [ ] 2.4 Implementar `src/routes/health.ts` con el endpoint de salud y el contrato de respuesta `{ data }`
-- [ ] 2.5 Implementar `src/middleware/errorHandler.ts` con mensajes entendibles y respuesta de error uniforme
-- [ ] 2.6 Implementar `src/middleware/validate.ts` (Zod) con errores por campo
-- [ ] 2.7 Escribir `backend/.env.example` con todas las variables del design
-- [ ] 2.8 Agregar pruebas Vitest + Supertest del endpoint de salud y del validador de configuración
+- [x] 2.1 Configurar TypeScript del backend (`tsconfig.json`) y scripts `dev`, `build`, `test`
+- [x] 2.2 Implementar `src/config/env.ts` con Zod: validar variables obligatorias y fallar con mensaje claro sin exponer valores
+- [x] 2.3 Implementar `src/app.ts` y `src/index.ts` con Express, JSON, CORS configurable y arranque del servidor
+- [x] 2.4 Implementar `src/routes/health.ts` con el endpoint de salud y el contrato de respuesta `{ data }`
+- [x] 2.5 Implementar `src/middleware/errorHandler.ts` con mensajes entendibles y respuesta de error uniforme
+- [x] 2.6 Implementar `src/middleware/validate.ts` (Zod) con errores por campo
+- [x] 2.7 Escribir `backend/.env.example` con todas las variables del design
+- [x] 2.8 Agregar pruebas Vitest + Supertest del endpoint de salud y del validador de configuración
 
 ## 3. Database foundation
 

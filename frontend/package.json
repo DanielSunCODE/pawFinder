@@ -1,0 +1,6 @@
+{
+  "name": "@pawfinder/frontend",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Aplicacion web (React + Vite + TypeScript). Placeholder: el rol de frontend completa esta base."
+}

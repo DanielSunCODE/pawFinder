@@ -1,0 +1,27 @@
+# Dependencias
+node_modules/
+
+# Builds
+dist/
+build/
+.vite/
+coverage/
+
+# Entorno y secretos
+.env
+.env.*
+!.env.example
+
+# Logs
+*.log
+npm-debug.log*
+
+# Editores y sistema
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db
+
+# Imagenes de prueba pesadas (el almacenamiento real vive fuera del proyecto)
+database/seeds/assets/*
+!database/seeds/assets/.gitkeep

@@ -1,0 +1,113 @@
+openapi: 3.0.3
+info:
+  title: Perritos de la calle — Media Storage API
+  description: >
+    Contrato del endpoint que sirve las fotos de los perritos a través del
+    backend (src/storage/fotoRoutes.ts). El cliente nunca accede
+    directamente a la carpeta local ni al bucket S3: siempre pasa por aquí.
+    Este documento cubre solo la parte de storage (task 4); el resto de la
+    API (POST /perros, búsquedas, etc.) la documenta Daniel en el spec del
+    backend.
+  version: "1.0.0"
+servers:
+  - url: http://localhost:3000
+    description: Desarrollo local
+  - url: https://api.tudominio.com
+    description: Producción (ajustar cuando exista)
+
+paths:
+  /perros/{id}/foto:
+    get:
+      summary: Obtiene la foto de un perrito
+      description: >
+        Devuelve el binario de la imagen asociada al perrito. El backend
+        resuelve `ruta_imagen` desde la base de datos y la lee a través del
+        driver de storage activo (`STORAGE_DRIVER=local` o `s3`); el bucket
+        y la ruta física nunca se exponen al cliente.
+      operationId: obtenerFotoPerro
+      tags: [Media]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: id_perro en la base de datos
+          schema:
+            type: integer
+            example: 42
+      responses:
+        "200":
+          description: Imagen encontrada
+          content:
+            image/jpeg: { schema: { type: string, format: binary } }
+            image/png:  { schema: { type: string, format: binary } }
+            image/webp: { schema: { type: string, format: binary } }
+          headers:
+            Cache-Control:
+              schema: { type: string, example: "public, max-age=86400" }
+        "404":
+          description: El perrito no existe o su imagen no se pudo leer
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error: { type: string }
+              examples:
+                sinPerro:
+                  value: { error: "Perrito no encontrado" }
+                sinImagen:
+                  value: { error: "No se pudo leer la imagen" }
+
+  /uploads/imagenes:
+    post:
+      summary: (Referencia) Validación de imagen al subir una foto
+      description: >
+        Este path es solo de referencia: documenta la validación de
+        contenido implementada en src/storage/validateImage.ts, para que
+        Daniel la use al construir el endpoint real de creación/edición de
+        perritos (POST /perros). No es un endpoint activo por sí solo: la
+        subida real vive en el contrato de POST /perros del backend.
+      operationId: validarImagenSubida
+      tags: [Media]
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                foto:
+                  type: string
+                  format: binary
+                  description: Archivo JPG/PNG/WEBP, máx. 8 MB
+      responses:
+        "201":
+          description: Imagen válida, guardada por el storage driver activo
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ruta: { type: string, example: "3f2a9e4b-....jpg" }
+        "422":
+          description: >
+            El archivo no es una imagen JPG/PNG/WEBP real (se valida por
+            contenido/magic bytes, no por extensión ni Content-Type), excede
+            el tamaño máximo, o viene vacío.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error: { type: string }
+              examples:
+                formatoInvalido:
+                  value: { error: 'Formato no permitido: application/pdf' }
+                vacio:
+                  value: { error: "Archivo vacío" }
+                tamano:
+                  value: { error: "Excede el tamaño máximo (8388608 bytes)" }
+
+tags:
+  - name: Media
+    description: Almacenamiento y entrega de fotos de perritos (task 4)

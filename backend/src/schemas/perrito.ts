@@ -36,9 +36,8 @@ export const datosPerritoNuevoSchema = z
     colorOjosId: z.number().int().positive(),
     // Único campo opcional (null = no se conocen).
     marcasDistintivas: textoOpcional.default(null),
-    // Fecha y hora de registro que envía el cliente (ISO 8601 con offset).
-    // Si no viene, la base usa su valor por defecto (CURRENT_TIMESTAMP).
-    fechaRegistro: z.string().datetime({ offset: true }).nullish(),
+    // La fecha de registro NO se recibe del cliente: la pone el sistema
+    // (CURRENT_TIMESTAMP en la base). Si el cliente la manda, se ignora.
     // Colores de pelo.
     colorPrincipalId: z.number().int().positive(),
     coloresAdicionalesIds: z.array(z.number().int().positive()).max(2).default([]),

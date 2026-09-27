@@ -104,7 +104,6 @@ frontend usa `frontend/.env.local` (copiado de `frontend/.env.example`).
 |---|---|---|
 | `VITE_API_URL` | `/api` | URL base del API vista por el navegador (proxy de Vite en dev). |
 | `BACKEND_URL` | `http://localhost:3000` | Destino del proxy de Vite (solo lo lee `vite.config.ts`). |
-| `VITE_USAR_MOCKS` | `false` | `true` = datos de prueba en memoria, sin backend. |
 | `VITE_MAPA_CENTRO` | `19.4326,-99.1332` | Centro inicial del mapa. |
 | `VITE_MAPA_ZOOM` | `13` | Zoom inicial. |
 | `VITE_MAPA_MOSAICOS_URL` | *(vacío)* | Proveedor de mapas alternativo; vacío = OpenStreetMap (sin llave). |
@@ -248,6 +247,12 @@ código está en [`docs/architecture.md`](./docs/architecture.md); el resumen:
 
 ## 12. Despliegue (punto extra)
 
+**Está en línea:**
+
+- App web: <https://paw-finder-frontend.vercel.app>
+- API: <https://pawfinder-hq2o.onrender.com> — documentación en
+  <https://pawfinder-hq2o.onrender.com/api/docs>
+
 Detalle completo en [`docs/deployment.md`](./docs/deployment.md). Resumen:
 
 - **Dónde corre cada pieza:** app web en **Vercel**, API en **Render**, MySQL en
@@ -268,7 +273,8 @@ Detalle completo en [`docs/deployment.md`](./docs/deployment.md). Resumen:
   las imágenes (ver `docs/deployment.md`).
 - **Sin Docker:** si se auto-hospeda, instalación directa con un servicio
   (`systemd`) y un proxy inverso (nginx/Caddy) al frente.
-- **URL pública:** _pendiente_ (se agrega aquí al publicar).
+- **URL pública:** app en <https://paw-finder-frontend.vercel.app> y API en
+  <https://pawfinder-hq2o.onrender.com>.
 
 ## 13. Estructura del repositorio
 

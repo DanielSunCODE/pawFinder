@@ -1,5 +1,4 @@
 // Implementación REAL de la API: habla con el backend usando fetch.
-import { ahoraIsoConOffset } from '../utils/fecha'
 import { conHex } from '../utils/transformaciones'
 import { ErrorApi, SIN_CONEXION, mensajePorEstado } from './errores'
 import type { ApiPerritos, Color, FiltrosPerritos, Id, PatronPelaje, Perrito, Raza, RespuestaError } from './tipos'
@@ -104,8 +103,7 @@ export function crearApiHttp(urlBase: string): ApiPerritos {
       // multipart/form-data: un campo "datos" con JSON y un campo "foto" con el archivo.
       // No ponemos Content-Type a mano: el navegador lo agrega con el "boundary" correcto.
       const formulario = new FormData()
-      // Momento del registro con la zona horaria del dispositivo.
-      formulario.append('fechaRegistro', ahoraIsoConOffset())
+      // La fecha la pone el backend; aquí no se envía.
       formulario.append('nombre', datos.nombre)
       if (datos.razaId !== null) formulario.append('razaId', String(datos.razaId))
       if (datos.sexo !== null) formulario.append('sexo', datos.sexo)

@@ -71,7 +71,6 @@ function leerDatosDelCuerpo(body: Record<string, unknown>): unknown {
     patronPelajeId: aNumeroOpcional(body.patronPelajeId) ?? null,
     colorOjosId: aNumeroOpcional(body.colorOjosId) ?? null,
     marcasDistintivas: aTextoOpcional(body.marcasDistintivas),
-    fechaRegistro: aTextoOpcional(body.fechaRegistro),
     colorPrincipalId: aNumeroOpcional(body.colorPrincipalId),
     coloresAdicionalesIds: aArrayDeIds(body.coloresAdicionalesIds),
     latitud: aNumeroOpcional(body.latitud),

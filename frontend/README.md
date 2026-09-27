@@ -207,7 +207,7 @@ nombre de un campo o de una ruta, sólo se toca `src/api/`.
 | Marcas distintivas: texto opcional, máximo 500 | `pages/RegistrarPage.tsx`, `utils/validacion.ts` |
 | Un color principal + 0 a 2 adicionales, sin repetir | `components/formulario/SelectorColores.tsx`, `utils/validacion.ts` |
 | Ubicación: la actual o moviendo el pin; se guardan latitud y longitud | `components/formulario/SelectorUbicacion.tsx` |
-| Fecha automática | El frontend manda el momento del registro en ISO 8601 con su offset (`utils/fecha.ts`); el usuario no la elige |
+| Fecha automática | La pone el backend con `CURRENT_TIMESTAMP`; el cliente no la envía ni el usuario la elige |
 | Mapa con un pin por perrito; al tocarlo, foto, nombre y colores | `pages/MapaPage.tsx` |
 | "Ver en el mapa" desde el detalle enfoca a ese perrito (`/?perrito=<id>`); "Cómo llegar" abre la ruta | `pages/DetallePage.tsx`, `pages/MapaPage.tsx` |
 | Lista con foto en miniatura | `pages/ListaPage.tsx` |

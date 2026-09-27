@@ -45,7 +45,8 @@ export interface Perrito {
   colorPrincipal: Color
   /** De 0 a 2 colores, sin repetir ni incluir el principal. */
   coloresAdicionales: Color[]
-  // Los siguientes son opcionales en la base: null = no se sabe.
+  // Obligatorios en la base y en la API. Se tipan como `| null` solo para
+  // tolerar respuestas viejas o incompletas; el formulario los exige.
   sexo: Sexo | null
   etapaVida: EtapaVida | null
   tamano: Tamano | null

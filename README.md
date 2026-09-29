@@ -128,7 +128,11 @@ después de cada instalación, y comprueba con el comando de la tabla de arriba.
 
 - **Node.js (ya incluye npm):** descarga el instalador **LTS** desde
   <https://nodejs.org> (elige "LTS", no "Current") y sigue el asistente. No
-  instales `npm` por separado: viene incluido con Node.
+  instales `npm` por separado: viene incluido con Node. Durante el asistente,
+  deja marcada la opción **"Add to PATH"** (viene marcada por defecto) y
+  **termina** la instalación hasta la pantalla final ("Finish"). Después
+  **cierra todas las terminales abiertas** y abre una nueva; una terminal
+  abierta antes de instalar no ve los programas nuevos.
 - **Git:** descarga el instalador de <https://git-scm.com/downloads> y acepta
   las opciones por defecto.
 - **MySQL:** no lo instales "de memoria"; tiene su propio paso a paso detallado
@@ -137,13 +141,54 @@ después de cada instalación, y comprueba con el comando de la tabla de arriba.
 
 Si ya tienes todo instalado, salta a la sección 4.
 
-**Windows (PowerShell):** si al correr `npm` aparece *"npm.ps1 cannot be loaded
-because running scripts is disabled on this system"*, es la política de
-ejecución de scripts de Windows. Dos soluciones:
+#### Windows: `npm` no funciona después de instalar Node
+
+Hay **dos errores distintos** que se parecen; identifica cuál es el tuyo.
+Primero, en una terminal **nueva**, corre:
+
+```
+node --version
+```
+
+**A) `npm` / `node` "no se reconoce como el nombre de un cmdlet..." (PowerShell)
+o "no se reconoce como un comando interno o externo" (cmd).** Windows no
+encuentra Node: **no es un problema de permisos**, así que `npm.cmd` y
+`Set-ExecutionPolicy` **no lo arreglan** (si `node --version` también falla,
+es este caso). Sigue en orden hasta que `node --version` responda:
+
+1. **Cierra todas las terminales y abre una nueva** (PowerShell o cmd). Es la
+   causa más común: el PATH solo se lee al abrir la terminal. Si sigue igual,
+   **reinicia Windows** y prueba de nuevo.
+2. Comprueba que Node quedó instalado: abre el Explorador y busca la carpeta
+   `C:\Program Files\nodejs\` (debe contener `node.exe` y `npm.cmd`).
+   - **Si no existe:** la instalación no terminó o no se ejecutó. Vuelve a
+     ejecutar el instalador `.msi` de <https://nodejs.org> hasta "Finish"
+     (o, en PowerShell: `winget install OpenJS.NodeJS.LTS`) y repite el paso 1.
+   - **Si existe** pero la terminal no lo reconoce, falta agregarla al PATH
+     (paso 3).
+3. Agregar Node al PATH manualmente: tecla Windows → escribe **"Editar las
+   variables de entorno del sistema"** → *Variables de entorno…* → en
+   *Variables de usuario* selecciona `Path` → *Editar* → *Nuevo* → pega
+   `C:\Program Files\nodejs\` → *Aceptar* en todo. Cierra y abre una terminal
+   nueva y prueba `node --version` y `npm --version`.
+4. Solución rápida para probar sin tocar el PATH (solo esa terminal):
+   ```
+   "C:\Program Files\nodejs\npm.cmd" --version
+   ```
+   Si eso responde pero `npm` a secas no, el problema es el PATH (paso 3).
+
+**B) *"npm.ps1 cannot be loaded because running scripts is disabled on this
+system"* (solo PowerShell).** Aquí Node **sí** está instalado; es la política
+de ejecución de scripts de Windows. Tres soluciones:
 - Usar `npm.cmd` en vez de `npm` (`npm.cmd install`, `npm.cmd run dev`), o
 - Abrir una terminal **cmd** (Símbolo del sistema) en vez de PowerShell, o
-- Permitirlo para tu usuario una sola vez:
+- Permitirlo para tu usuario una sola vez, **en PowerShell** (no en cmd, donde
+  este comando no existe):
   `Set-ExecutionPolicy -Scope CurrentUser -ExecutionPolicy RemoteSigned`
+
+> En cmd no existen comandos de PowerShell ni de Linux como `ls` (usa `dir`)
+> ni `Set-ExecutionPolicy`. Si ves "no se reconoce" con ellos, es normal y no
+> indica un problema de instalación.
 
 **macOS/Linux:** no se probó explícitamente en el repositorio más allá de lo
 anterior; los comandos de este README dan la variante de cada sistema donde
@@ -807,7 +852,8 @@ la cámara abierta en el momento de tomar la foto), agrega el archivo a
 | El mapa dice "API KEY REQUIRED" | `VITE_MAPA_MOSAICOS_URL` apunta a un proveedor que pide llave (ej. CARTO) | Déjala vacía para usar OpenStreetMap (sin llave) |
 | `db:seed` falla por `ruta_imagen` duplicada | Ya se sembró antes | Usa `npm run db:reset` para empezar de cero |
 | `db:reset` se cancela con un mensaje de "solo local" | `DB_HOST` no es `localhost`/`127.0.0.1` | Es intencional: protección para no borrar Aiven/producción por accidente |
-| PowerShell: `npm.ps1 cannot be loaded...` | Windows bloquea scripts `.ps1` | Usa `npm.cmd`, la terminal `cmd`, o cambia la política de ejecución (ver sección 3) |
+| `npm` / `node` "no se reconoce como el nombre de un cmdlet" (PowerShell) o "como un comando interno o externo" (cmd) | Node.js no está instalado o no está en el `PATH` (terminal abierta antes de instalar, o instalación incompleta). `npm.cmd` **no** lo arregla | Cierra todas las terminales y abre una nueva; si sigue, reinicia Windows, verifica `C:\Program Files\nodejs\` y agrégalo al `PATH` (sección 3.1, caso A) |
+| PowerShell: `npm.ps1 cannot be loaded...` | Windows bloquea scripts `.ps1` (Node sí está instalado) | Usa `npm.cmd`, la terminal `cmd`, o cambia la política de ejecución en PowerShell (sección 3.1, caso B) |
 | Puerto 5173 u 3000 ocupado | Otro proceso ya lo usa | Vite prueba el siguiente puerto libre solo; para el backend, cambia `PORT` en `backend/.env` |
 | CORS bloqueado en el navegador | `CORS_ORIGIN` del backend no incluye el origen del frontend | Agrega la URL exacta (con protocolo) a `CORS_ORIGIN`, separadas por coma si son varias |
 | Migraciones no aplican cambios nuevos a una tabla ya creada | Las migraciones usan `CREATE TABLE IF NOT EXISTS`: si la tabla ya existe, MySQL ignora la nueva definición | Escribe una migración nueva con `ALTER TABLE` (como `004`–`006`), no edites una ya aplicada |

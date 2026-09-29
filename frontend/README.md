@@ -41,6 +41,10 @@ npm ci
 > **Windows con PowerShell:** si aparece *"npm.ps1 cannot be loaded because running scripts is disabled
 > on this system"*, usar `npm.cmd` en lugar de `npm` (`npm.cmd ci`, `npm.cmd run dev`) o abrir la
 > terminal **cmd** (Símbolo del sistema), donde `npm` funciona normal.
+>
+> Si en cambio dice que `npm` **"no se reconoce"** como comando, Node.js no está en el `PATH`:
+> cierra todas las terminales y abre una nueva (o reinicia Windows); si persiste, ver la sección
+> 3.1 del [README principal](../README.md).
 
 Copiar la configuración de ejemplo:
 
@@ -255,6 +259,7 @@ dos perritos distintos pueden llamarse igual y estar en el mismo lugar.
 | "No diste permiso para usar tu ubicación" | Permitirla en el candado de la barra de direcciones → Ubicación. En Windows, además: Configuración → Privacidad y seguridad → Ubicación, activada para el navegador. |
 | "Tomar foto" abre el explorador en la computadora | Normal: el atributo `capture` sólo abre la cámara en celulares. |
 | PowerShell: *"npm.ps1 cannot be loaded… running scripts is disabled"* | Windows bloquea scripts `.ps1`. Usar `npm.cmd ci` / `npm.cmd run dev`, o la terminal cmd. Para quitarlo en tu usuario: `Set-ExecutionPolicy -Scope CurrentUser -ExecutionPolicy RemoteSigned`. |
+| `npm` "no se reconoce como comando" (PowerShell o cmd) | Node.js no está instalado o no está en el `PATH`; `npm.cmd` no lo arregla. Cerrar todas las terminales y abrir una nueva, o reiniciar Windows; ver sección 3.1 del README principal. |
 | `npm ci` falla por versión de Node | Instalar Node 22.12 o más nuevo (`node -v` para revisar). |
 | Puerto 5173 ocupado | Vite usará el siguiente libre (5174…); revisar la URL que imprime. |
 

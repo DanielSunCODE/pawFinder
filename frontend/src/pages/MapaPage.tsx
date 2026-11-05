@@ -2,14 +2,17 @@
 // Al tocar un pin se ve su foto, nombre y colores.
 // Con ?perrito=<id> en la dirección (botón "Ver en el mapa" del detalle), el mapa va directo a ese
 // perrito y abre su globo. Va en la dirección para que funcione al recargar o compartir el enlace.
-import { LoaderCircle, LocateFixed, PawPrint, X } from 'lucide-react'
+// El botón "Zonas" (Proyecto 2) pinta encima los cuadros de concentración que calcula el servicio Elixir.
+import { Grid3x3, LoaderCircle, LocateFixed, PawPrint, X } from 'lucide-react'
 import type { Marker as MarcadorLeaflet } from 'leaflet'
 import { useEffect, useMemo, useRef, useState, type RefObject } from 'react'
 import { CircleMarker, Marker, Popup, useMap } from 'react-leaflet'
 import { Link, useSearchParams } from 'react-router'
 import { api, type Id, type Perrito } from '../api'
+import { obtenerZonas } from '../api/zonas'
 import { EtiquetasColores } from '../components/Colores'
 import { MensajeError } from '../components/Estado'
+import { CapaZonas, LeyendaZonas } from '../components/mapa/CapaZonas'
 import { MapaBase } from '../components/mapa/MapaBase'
 import { iconoPerrito } from '../components/mapa/iconos'
 import { useAsync } from '../hooks/useAsync'
@@ -91,6 +94,14 @@ export function MapaPage() {
   const [buscandoUbicacion, setBuscandoUbicacion] = useState(false)
   const [errorUbicacion, setErrorUbicacion] = useState<string | null>(null)
 
+  // Zonas de concentración: sólo se piden cuando el botón está activo.
+  const [verZonas, setVerZonas] = useState(false)
+  const [tamanoZonas, setTamanoZonas] = useState(500)
+  const zonas = useAsync(
+    () => (verZonas ? obtenerZonas(tamanoZonas) : Promise.resolve(null)),
+    [verZonas, tamanoZonas],
+  )
+
   // Creamos los íconos una sola vez por lista, no en cada render.
   const marcadores = useMemo(
     () => (perritos ?? []).map((perrito) => ({ perrito, icono: iconoPerrito(perrito) })),
@@ -116,20 +127,24 @@ export function MapaPage() {
       <MapaBase className="size-full">
         <VolarA destino={miUbicacion} />
 
-        {marcadores.map(({ perrito, icono }) => (
-          <Marker
-            key={perrito.id}
-            position={[perrito.latitud, perrito.longitud]}
-            icon={icono}
-            alt={perrito.nombre}
-            ref={(marcador) => {
-              if (marcador) refsMarcadores.current.set(perrito.id, marcador)
-              else refsMarcadores.current.delete(perrito.id)
-            }}
-          >
-            <GloboPerrito perrito={perrito} />
-          </Marker>
-        ))}
+        {verZonas && zonas.datos && <CapaZonas resultado={zonas.datos} />}
+
+        {/* Con las zonas activas se ocultan los pines para que se lean los cuadros y sus números. */}
+        {!verZonas &&
+          marcadores.map(({ perrito, icono }) => (
+            <Marker
+              key={perrito.id}
+              position={[perrito.latitud, perrito.longitud]}
+              icon={icono}
+              alt={perrito.nombre}
+              ref={(marcador) => {
+                if (marcador) refsMarcadores.current.set(perrito.id, marcador)
+                else refsMarcadores.current.delete(perrito.id)
+              }}
+            >
+              <GloboPerrito perrito={perrito} />
+            </Marker>
+          ))}
 
         {/* Va después de los pines: así, cuando corre, los globos ya están listos para abrirse. */}
         {perritos && <EncuadrarPerritos perritos={perritos} enfocado={enfocado} marcadores={refsMarcadores} />}
@@ -154,6 +169,30 @@ export function MapaPage() {
           </>
         )}
       </div>
+
+      <button
+        type="button"
+        className={`absolute top-3.5 right-3 z-1000 inline-flex h-11 items-center gap-2 rounded-full px-3 text-sm font-bold shadow-tarjeta md:px-4 ${
+          verZonas ? 'bg-primario text-white' : 'bg-superficie text-texto'
+        }`}
+        onClick={() => setVerZonas((activo) => !activo)}
+        aria-pressed={verZonas}
+        aria-label={verZonas ? 'Ocultar zonas de concentración' : 'Ver zonas de concentración'}
+      >
+        <Grid3x3 size={20} aria-hidden="true" />
+        <span className="hidden md:inline">Zonas</span>
+      </button>
+
+      {verZonas && (
+        <LeyendaZonas
+          resultado={zonas.datos}
+          cargando={zonas.cargando}
+          error={zonas.error}
+          alReintentar={zonas.reintentar}
+          tamano={tamanoZonas}
+          alCambiarTamano={setTamanoZonas}
+        />
+      )}
 
       <button
         type="button"

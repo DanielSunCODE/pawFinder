@@ -12,6 +12,7 @@ no existe, se usa un `.env` en la raíz.
 ```bash
 npm run db:migrate   # aplica migraciones pendientes (idempotente, usa schema_migrations)
 npm run db:seed      # carga catálogos y perritos de prueba (una sola vez)
+npm run db:seed:avistamientos   # completa hasta 100 avistamientos de prueba (idempotente)
 npm run db:reset     # DROP + CREATE + migrate + seed (solo contra DB_HOST local)
 npm run db:backup    # respaldo a database/backups/<db>_<fecha>.sql.gz
 npm run db:restore -- database/backups/archivo.sql.gz

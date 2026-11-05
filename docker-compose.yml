@@ -49,3 +49,10 @@ services:
   # ── Aldo: bd y backend van aquí ──
 
   # ── Daniel: funcional va aquí ──
+
+  funcional:
+    build: ./funcional
+    environment:
+      PORT: "4000"
+      # El backend del P1 (servicio "backend", que agrega Aldo). Nunca localhost dentro de Docker.
+      BACKEND_URL: http://backend:3000

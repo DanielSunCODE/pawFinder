@@ -355,6 +355,7 @@ el backend **no arranca** y muestra en consola exactamente qué variable falta.
 |---|---|---|---|
 | `VITE_API_URL` | No (default `/api`) | `/api` | URL base del API vista por el navegador. En desarrollo se deja así y el proxy de Vite la reenvía. |
 | `BACKEND_URL` | No (default `http://localhost:3000`) | `http://localhost:3000` | A dónde reenvía el proxy de Vite las peticiones `/api`. Solo lo lee `vite.config.ts` (Node), no el navegador. |
+| `VITE_FUNCIONAL_URL` | No (default `/f`) | `https://mi-servicio.onrender.com/f` | URL base del servicio Elixir vista por el navegador. En producción (Vercel) hay que apuntarla al servicio desplegado; ver `docs/deployment.md`. |
 | `VITE_MAPA_CENTRO` | No (default `19.4326,-99.1332`, Zócalo CDMX) | `25.6866,-100.3161` | Centro inicial del mapa, `"latitud,longitud"`. |
 | `VITE_MAPA_ZOOM` | No (default `13`) | `13` | Zoom inicial. |
 | `VITE_MAPA_MOSAICOS_URL` | No | *(vacío)* | Proveedor de mapas alternativo; vacío = OpenStreetMap (sin llave). |
@@ -677,6 +678,7 @@ mix run --no-halt         # http://localhost:4000/f/salud
 |---|---|---|---|
 | `PORT` | No | `4000` | Puerto del servicio. |
 | `BACKEND_URL` | No | `http://localhost:3000` | Backend del P1 al que le pide `GET /api/perritos`. En Docker es `http://backend:3000`. |
+| `CORS_ORIGIN` | Solo si el frontend está en otro origen | *(vacío)* | Orígenes que pueden llamarlo desde el navegador, separados por comas (p. ej. `https://paw-finder-frontend.vercel.app`). En Docker y en desarrollo no hace falta: hay un solo origen. |
 
 En desarrollo, Vite reenvía `/f` a `http://localhost:4000` (variable
 `FUNCIONAL_URL` del frontend); en Docker lo hace `proxy/nginx.conf`.

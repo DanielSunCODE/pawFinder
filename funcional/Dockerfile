@@ -9,6 +9,10 @@ FROM elixir:1.18-otp-27-slim AS compilar
 WORKDIR /app
 ENV MIX_ENV=prod
 
+# La imagen slim no trae certificados: sin ellos Hex no puede descargar nada por HTTPS.
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends ca-certificates git \
+    && rm -rf /var/lib/apt/lists/*
 RUN mix local.hex --force && mix local.rebar --force
 
 # Primero sólo las dependencias, para que Docker las reutilice si no cambian.

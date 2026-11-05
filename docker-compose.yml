@@ -100,6 +100,27 @@ services:
       # URL base del servicio funcional, vista desde el navegador.
       FUNCIONAL_URL: http://funcional:4000
 
+  # Herramientas de desarrollo de Elixir (no arranca con `docker compose up`, sólo con run):
+  #   docker compose run --rm herramientas mix test
+  # Usa la etapa de compilación del Dockerfile (trae Elixir), así no hace falta instalarlo.
+  # Monta ./funcional para probar el código actual; deps y _build viven en volúmenes aparte.
+  herramientas:
+    profiles: ["herramientas"]
+    build:
+      context: ./funcional
+      target: compilar
+    working_dir: /app
+    environment:
+      MIX_ENV: test
+    entrypoint: ["sh", "-c", "mix deps.get && exec \"$$@\"", "--"]
+    command: ["mix", "test"]
+    volumes:
+      - ./funcional:/app
+      - herramientas-deps:/app/deps
+      - herramientas-build:/app/_build
+
 volumes:
   bd-datos:
   fotos:
+  herramientas-deps:
+  herramientas-build:

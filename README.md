@@ -48,6 +48,88 @@ llave de API).
 
 ---
 
+## Del P1 al P2
+
+El Proyecto 2 **continúa el mismo repositorio** (historial del P1 intacto) y añade, sin
+tocar lo que ya funcionaba, un servicio aparte en **Elixir** (`funcional/`, Plug + Bandit,
+sin Phoenix) con tres funcionalidades nuevas que se usan desde el mismo frontend.
+
+| | Proyecto 1 | Proyecto 2 (se agrega) |
+|---|---|---|
+| Qué es | React + Express + MySQL | Servicio Elixir `funcional/` + infraestructura Docker |
+| Paradigma | Declarativo (SQL), imperativo, OO y algo de funcional | **Funcional**: núcleo puro y cáscara delgada |
+| Cómo se corre | Sin Docker (`npm run dev`) | `docker compose up --build` (todo junto) |
+| Rutas | `/api/...` | `/f/...` (el frontend las llama con rutas relativas) |
+| Datos | MySQL | El servicio Elixir se los pide al backend: `GET /api/perritos` (con Req) |
+
+Qué **no** cambió: el backend, la base y el frontend del P1 siguen igual y se siguen
+pudiendo instalar y correr sin Docker (secciones 4 a 9). Lo nuevo se suma encima.
+
+### Las tres funcionalidades
+
+| Funcionalidad | Responsable | Issue | Endpoint | Frontend | Núcleo puro (donde está lo funcional) |
+|---|---|---|---|---|---|
+| Zonas de concentración | Luis | #17 | `GET /f/zonas?tamano=500` | Botón "Ver zonas" en el mapa (`MapaPage.tsx`) | `funcional/lib/perritos/zonas.ex` |
+| Posibles duplicados | Daniel | #18 | `POST /f/duplicados` | Aviso "¿No será éste?" en `RegistrarPage.tsx` | `funcional/lib/perritos/duplicados.ex` |
+| Estadísticas | Aldo | #19 | `GET /f/estadisticas?top=5&colores=principal` | Pantalla `/estadisticas` con gráficas (`EstadisticasPage.tsx`) | `funcional/lib/perritos/estadisticas.ex` |
+
+Infraestructura del P2 (issues #16 a #19): Dockerfile del frontend, proxy nginx y túnel de
+Cloudflare (#16); proyecto Elixir, `/f/salud`, módulo de datos y Dockerfile en dos etapas
+(#18); MySQL, backend con migraciones y seeds al arrancar, 100 avistamientos de prueba y
+volumen de fotos (#19). El detalle de cada endpoint está en la sección 11 y la fórmula y
+decisiones de cada funcionalidad en la sección 11 ("Servicio funcional") y en
+[`docs/architecture.md`](./docs/architecture.md).
+
+### Núcleo y cáscara
+
+- **Núcleo** (`zonas.ex`, `duplicados.ex`, `estadisticas.ex`): solo funciones puras. No
+  consultan la base, no reciben peticiones y no leen el reloj (el desfase horario de
+  Saltillo y el tamaño de celda llegan como argumento).
+- **Cáscara** (`zonas_web.ex`, `duplicados_web.ex`, `estadisticas_web.ex`, `router.ex`):
+  trae los datos con `Perritos.Datos`, llama al núcleo y responde JSON. No calcula nada.
+
+### Dónde está cada requisito del paradigma
+
+| Requisito | Zonas (`zonas.ex`) | Duplicados (`duplicados.ex`) | Estadísticas (`estadisticas.ex`) |
+|---|---|---|---|
+| Sin estado mutable (ni Agent, GenServer ni ETS) | Todo el módulo | Todo el módulo | Todo el módulo |
+| Pattern matching y cláusulas múltiples | `coordenadas/1`, `nivel/3` | `perfil/1`, `similitud_raza/3`, `cercania/1` | `clasificador/2`, `dia/2`, `mas_comunes/2` |
+| Función que **recibe** una función | `contar/2` (recibe `asignar`) | `buscar/3` (opción `:con`) | `contar/2` (recibe `clasificar`) |
+| Función que **regresa** una función | `asignador/2` (según el tamaño de celda) | `ponderar/1` (según los pesos) | `clasificador/2` (según el criterio) |
+| Recursión escrita a mano | `nivel/3` | `emparejar/3`, `parejas/1` | `mas_comunes/2` |
+| Flujos con `\|>` | `zonas/2`, `contar/2` | `buscar/3` | `contar/2`, `resumen/2` |
+| `Stream` | `contar/2` (`Stream.flat_map`/`map`) | — | `contar/2` (`Stream.flat_map`); acepta lista o `Stream` |
+| `reduce` / `group_by` | `Enum.reduce` para contar por celda | — | `Enum.group_by` + `Enum.reduce` |
+| Pruebas ExUnit (≥5, con casos borde) y doctests | `test/zonas_test.exs` | `test/duplicados_test.exs` | `test/estadisticas_test.exs` |
+| `@doc` en las públicas | Sí | Sí | Sí |
+
+`cd funcional && mix test` corre las pruebas de los tres (más las de CORS); el alias
+`test: "test --no-start"` evita que arranque el servidor.
+Sin Elixir instalado: `docker compose run --rm herramientas mix test` (servicio
+`herramientas` del compose; no arranca con `docker compose up`, solo con `run`).
+
+### Contenedores (seis)
+
+`docker compose up --build` levanta: **`frontend`** (Vite compilado, servido con nginx),
+**`proxy`** (nginx: `/` al frontend, `/api/` al backend sin quitar el `/api`, `/f/` a
+Elixir), **`tunel`** (Cloudflare), **`bd`** (MySQL), **`backend`** (Express, con migraciones
+y seeds al arrancar) y **`funcional`** (Elixir). Volúmenes: `bd-datos` y `fotos`.
+
+### Abrir la app por el túnel (demostración)
+
+```bash
+docker compose up --build        # primera vez; luego basta `docker compose up`
+docker compose logs tunel        # busca la línea https://<algo>.trycloudflare.com
+```
+
+Esa URL se abre desde cualquier celular. Es un *quick tunnel*: **la URL cambia cada vez que
+se reinicia el contenedor `tunel`**, así que se saca justo antes de la demostración. La app
+usa rutas relativas (`/api`, `/f`), por eso funciona igual por el túnel que en
+`http://localhost:8080`. Para levantarla sin túnel público:
+`docker compose up -d --build bd backend funcional proxy`.
+
+---
+
 ## 2. Arquitectura
 
 ```mermaid
@@ -63,7 +145,14 @@ local / Aiven")]
   B -->|"guarda y lee binario"| S[("Storage
 RUTA_IMAGENES local o S3")]
   F -.->|"mosaicos (sin llave)"| M[("OpenStreetMap")]
+  F -->|"/f (P2)"| E["Servicio funcional
+Elixir + Plug + Bandit"]
+  E -->|"GET /api/perritos (Req)"| B
 ```
+
+En la demostración del P2 todo corre en Docker detrás de un proxy nginx
+(`/` frontend, `/api/` backend, `/f/` Elixir) publicado por un túnel de Cloudflare;
+ver "Del P1 al P2".
 
 - **Frontend:** SPA (React Router) que solo habla con el backend a través de
   `/api`. En desarrollo, Vite hace de proxy de `/api` hacia el backend (evita
@@ -646,6 +735,7 @@ docker compose up --build            # app completa en http://localhost:8080
 docker compose up -d --build bd backend funcional proxy   # igual, pero SIN el túnel público
 docker compose build funcional       # solo la imagen del servicio Elixir
 docker compose run --rm --entrypoint "" funcional bin/perritos eval 'IO.puts(:ok)'   # comprobar que arranca
+docker compose run --rm herramientas mix test   # pruebas del núcleo sin instalar Elixir
 ```
 
 El compose levanta también la base y el backend del P1:
@@ -915,7 +1005,7 @@ npm run test:backend          # Vitest + Supertest: incluye backend/tests/perrit
                                #  filtros, formato de la respuesta)
 npm run db:typecheck          # tipos de los scripts de base de datos
 npm run test --workspace @pawfinder/frontend   # reglas de validación del formulario, idempotencia, utilidades
-cd funcional && mix test      # Elixir: núcleo de duplicados y zonas (ExUnit + doctests)
+cd funcional && mix test      # Elixir: núcleo de duplicados, zonas y estadísticas (ExUnit + doctests)
 npm run ci                    # todo junto: lint + tipos + pruebas + build, backend y frontend
 ```
 
@@ -1001,10 +1091,13 @@ El proyecto usa, a propósito, más de un paradigma de programación.
   `validarRegistro` (`frontend/src/utils/validacion.ts`) arma los errores con
   `map`→`filter`→`reduce` sin mutar los datos, y hay pruebas que verifican esa
   ausencia de mutación; el servicio Elixir (`funcional/`) es funcional por
-  completo en su núcleo: `Perritos.Duplicados` y `Perritos.Zonas` solo tienen
-  funciones puras (pattern matching con cláusulas múltiples, recursión
+  completo en su núcleo: `Perritos.Duplicados`, `Perritos.Zonas` y `Perritos.Estadisticas` solo
+  tienen funciones puras (pattern matching con cláusulas múltiples, recursión
   escrita a mano en `emparejar/2` y `parejas/1`, `ponderar/1` que **regresa**
-  una función, `buscar/3` que **recibe** una función, flujos con `|>`).
+  una función, `buscar/3` que **recibe** una función, flujos con `|>`; en `Estadisticas`, `clasificador/2`
+  regresa la función y `contar/2` la recibe y cuenta con `Enum.group_by` +
+  `Enum.reduce` sobre una lista o un `Stream`, sin contadores mutables). La tabla
+  de "dónde está cada requisito" está en "Del P1 al P2".
   Las rutas `/f/...` son la cáscara: traen los datos, llaman al núcleo y
   responden JSON, sin calcular nada.
 
@@ -1322,6 +1415,10 @@ Servidor
 - [ ] Doble envío del formulario no duplica el registro (idempotencia)
 - [ ] `npm run ci` pasa en local (lint + tipos + pruebas + build)
 - [ ] Probado desde un celular real con `npm run dev:red`
+- [ ] (P2) `docker compose up --build` levanta los 6 contenedores desde un clon limpio
+- [ ] (P2) `docker compose logs tunel` muestra la URL `trycloudflare.com` y abre la app en un celular
+- [ ] (P2) `cd funcional && mix test` pasa (núcleo de las tres funcionalidades)
+- [ ] (P2) "Ver zonas", el aviso de duplicados y `/estadisticas` funcionan desde la interfaz
 
 ---
 

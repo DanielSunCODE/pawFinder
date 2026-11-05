@@ -99,6 +99,15 @@ backend/     API REST (Node + Express + TypeScript)
     middleware/           Errores uniformes y validación
     docs/                 Documento OpenAPI generado desde los esquemas Zod
   tests/                 Vitest + Supertest
+funcional/   Servicio Elixir del Proyecto 2 (Plug + Bandit, sin Phoenix)
+  lib/perritos/
+    duplicados.ex        Núcleo puro: posibles duplicados (Jaccard, raza, haversine)
+    duplicados_web.ex    Cáscara: POST /f/duplicados
+    zonas.ex, zonas_web.ex   Zonas de concentración (Luis)
+    datos.ex             Pide los perritos al backend con Req (único módulo con red)
+    router.ex            /f/salud y reparto de rutas /f/...
+  test/                  ExUnit + doctests (`mix test` no arranca el servidor)
+  Dockerfile             Dos etapas (mix release)
 database/    Migraciones, seeds y scripts SQL
   migrations/            Esquema versionado 001…006, aplicado con database/scripts/migrate.ts
   seeds/                 Catálogos y perritos de prueba
@@ -620,6 +629,38 @@ npm run dev:frontend
 **Modo producción:** `npm run build --workspace @pawfinder/frontend` genera
 `frontend/dist/` (estático); lo sirve un proxy inverso (ver §25).
 
+### 9.1 Servicio funcional (Elixir, Proyecto 2)
+
+Los posibles duplicados (y las zonas) los calcula un servicio aparte en Elixir,
+en `funcional/`. El P1 (React, Express, MySQL) sigue instalándose y corriendo
+**sin Docker**; Docker se usa solo para este servicio y el despliegue del P2.
+
+**Con Docker** (no hace falta instalar Elixir; el servicio queda en el
+`docker-compose.yml` de la raíz, junto con proxy y túnel):
+
+```bash
+docker compose up --build            # app completa en http://localhost:8080
+docker compose build funcional       # solo la imagen del servicio Elixir
+docker compose run --rm --entrypoint "" funcional bin/perritos eval 'IO.puts(:ok)'   # comprobar que arranca
+```
+
+**Sin Docker** (requiere Elixir 1.17+ y Erlang/OTP 26+; el backend debe estar corriendo):
+
+```bash
+cd funcional
+mix deps.get
+mix test                  # núcleo puro: no arranca el servidor ni necesita el backend
+mix run --no-halt         # http://localhost:4000/f/salud
+```
+
+| Variable | Obligatoria | Default | Descripción |
+|---|---|---|---|
+| `PORT` | No | `4000` | Puerto del servicio. |
+| `BACKEND_URL` | No | `http://localhost:3000` | Backend del P1 al que le pide `GET /api/perritos`. En Docker es `http://backend:3000`. |
+
+En desarrollo, Vite reenvía `/f` a `http://localhost:4000` (variable
+`FUNCIONAL_URL` del frontend); en Docker lo hace `proxy/nginx.conf`.
+
 ---
 
 ## 10. Probar desde un celular en la misma red
@@ -675,6 +716,35 @@ desde los mismos esquemas Zod que validan cada endpoint (`backend/src/docs/`).
 
 No hay autenticación: la consigna del proyecto no la pide (ver
 `MASTER_PROMPT.md`).
+
+### Servicio funcional (Proyecto 2): rutas `/f`
+
+Servicio aparte en Elixir (`funcional/`). El frontend lo llama con rutas
+relativas (`/f/...`), igual que `/api`. Mismo formato de respuesta:
+`{ "data": ... }` o `{ "error": { "message" } }`. Los datos los pide al backend
+del P1 (`GET /api/perritos`).
+
+| Método | Endpoint | Descripción | Body / query | Respuesta |
+|---|---|---|---|---|
+| GET | `/f/salud` | Estado del servicio | — | `200 { data: { estado: "ok", servicio } }` |
+| GET | `/f/zonas` | Zonas de concentración | query: `tamano` (100–5000 m, default 500) | `200 { data: { tamano, resumen, zonas } }` |
+| POST | `/f/duplicados` | Posibles duplicados del perrito que se registra | JSON: `razaId`, `razaNombre`, `colorPrincipalId`, `coloresAdicionalesIds`, `latitud`, `longitud` | `200 { data: { umbral, duplicados: [{ id, nombre, raza, similitud, latitud, longitud }] } }` · `400` si faltan color o coordenadas · `503` si el backend no responde |
+
+**Posibles duplicados.** `similitud = 0.4 × colores + 0.2 × raza + 0.4 × cercanía`:
+
+- *colores*: índice de Jaccard entre los conjuntos de colores (principal + adicionales);
+- *raza*: `1` si es la misma, `0` si son distintas y `0.5` si alguna es
+  "Sin raza definida / Criollo" (desconocida);
+- *cercanía*: `1 − distancia/500 m` con la distancia de haversine (0 a 500 m o más).
+
+Se avisa si la similitud llega a **0.8**; el resultado va de la más a la menos
+parecida (en empate, por id) y se limita a 5. En el formulario de registro
+aparece el aviso "¿No será éste?" antes de guardar; es solo un aviso, no
+bloquea el registro.
+
+```bash
+curl -X POST http://localhost:4000/f/duplicados -H "Content-Type: application/json"   -d '{"razaId":1,"razaNombre":"Labrador","colorPrincipalId":1,"coloresAdicionalesIds":[],"latitud":25.42,"longitud":-101.0}'
+```
 
 ### Campos del body de `POST /api/perritos`
 
@@ -789,7 +859,11 @@ Respuesta de error (400, validación):
    o raza; la lista debe actualizarse sin recargar la página.
 4. **Mapa:** en `/` debe aparecer un pin por cada perrito; al tocar un pin se
    ve su foto, nombre y colores.
-5. **Doble envío (idempotencia):** en el formulario, presiona "Enviar" y, sin
+5. **Posibles duplicados:** con el servicio Elixir y el backend corriendo, en
+   `/registrar` elige el color y marca el pin muy cerca de un perrito ya
+   registrado del mismo color; debe aparecer el aviso "¿No será éste?" con su
+   foto y el porcentaje de parecido, sin impedir el registro.
+6. **Doble envío (idempotencia):** en el formulario, presiona "Enviar" y, sin
    esperar la respuesta, comprueba en las herramientas de red que si la
    petición se reintenta con la misma clave, la base **no** gana un segundo
    registro (`SELECT COUNT(*) FROM perros` antes y después debe dar el mismo
@@ -803,6 +877,7 @@ npm run test:backend          # Vitest + Supertest: incluye backend/tests/perrit
                                #  filtros, formato de la respuesta)
 npm run db:typecheck          # tipos de los scripts de base de datos
 npm run test --workspace @pawfinder/frontend   # reglas de validación del formulario, idempotencia, utilidades
+cd funcional && mix test      # Elixir: núcleo de duplicados y zonas (ExUnit + doctests)
 npm run ci                    # todo junto: lint + tipos + pruebas + build, backend y frontend
 ```
 
@@ -887,7 +962,13 @@ El proyecto usa, a propósito, más de un paradigma de programación.
   (`backend/src/repositories/perritosRepository.ts`); en el frontend,
   `validarRegistro` (`frontend/src/utils/validacion.ts`) arma los errores con
   `map`→`filter`→`reduce` sin mutar los datos, y hay pruebas que verifican esa
-  ausencia de mutación.
+  ausencia de mutación; el servicio Elixir (`funcional/`) es funcional por
+  completo en su núcleo: `Perritos.Duplicados` y `Perritos.Zonas` solo tienen
+  funciones puras (pattern matching con cláusulas múltiples, recursión
+  escrita a mano en `emparejar/2` y `parejas/1`, `ponderar/1` que **regresa**
+  una función, `buscar/3` que **recibe** una función, flujos con `|>`).
+  Las rutas `/f/...` son la cáscara: traen los datos, llaman al núcleo y
+  responden JSON, sin calcular nada.
 
 Detalle ampliado, con la explicación de "por qué ahí conviene ese paradigma":
 [`docs/architecture.md`](./docs/architecture.md).

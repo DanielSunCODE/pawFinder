@@ -97,6 +97,8 @@ services:
       TZ: America/Monterrey
       # El backend del P1 (servicio "backend", que agrega Aldo). Nunca localhost dentro de Docker.
       BACKEND_URL: http://backend:3000
+      # URL base del servicio funcional, vista desde el navegador.
+      FUNCIONAL_URL: http://funcional:4000
 
 volumes:
   bd-datos:

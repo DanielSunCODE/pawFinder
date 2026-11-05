@@ -57,6 +57,12 @@ export const estilos = {
   mapaPista:
     'pointer-events-none absolute bottom-3.5 left-1/2 z-1000 -translate-x-1/2 rounded-full bg-texto/82 px-3.5 py-2 text-sm font-bold whitespace-nowrap text-white',
 
+  // Aviso de posibles duplicados
+  avisoDuplicados: 'flex flex-col gap-3 rounded-campo bg-aviso-suave px-4.5 py-4 text-aviso-texto [&>p]:text-sm [&>p]:font-semibold',
+  avisoDuplicadosTitulo: 'flex items-center gap-2 text-lg font-extrabold',
+  avisoDuplicadosLista:
+    'flex flex-col gap-2.5 [&>li]:flex [&>li]:items-center [&>li]:gap-3 [&>li]:rounded-chico [&>li]:bg-superficie [&>li]:p-2.5 [&_img]:size-14 [&_img]:rounded-chico [&_img]:object-cover [&_div]:flex [&_div]:min-w-0 [&_div]:flex-1 [&_div]:flex-col [&_div]:text-sm [&_div]:text-texto [&_span]:text-texto-suave',
+
   // Envío
   resumenErrores:
     'rounded-campo bg-error-suave px-4.5 py-4 [&>p]:font-extrabold [&>ul]:mt-1.5 [&>ul]:list-disc [&>ul]:pl-5 [&_button]:inline [&_button]:py-0.5 [&_button]:text-left [&_button]:font-bold [&_button]:text-error [&_button]:underline',

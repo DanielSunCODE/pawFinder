@@ -103,6 +103,8 @@ funcional/   Servicio Elixir del Proyecto 2 (Plug + Bandit, sin Phoenix)
   lib/perritos/
     duplicados.ex        Núcleo puro: posibles duplicados (Jaccard, raza, haversine)
     duplicados_web.ex    Cáscara: POST /f/duplicados
+    estadisticas.ex      Núcleo puro: conteos por color, raza y día, y los n más comunes
+    estadisticas_web.ex  Cáscara: GET /f/estadisticas
     zonas.ex, zonas_web.ex   Zonas de concentración (Luis)
     datos.ex             Pide los perritos al backend con Req (único módulo con red)
     router.ex            /f/salud y reparto de rutas /f/...
@@ -111,7 +113,7 @@ funcional/   Servicio Elixir del Proyecto 2 (Plug + Bandit, sin Phoenix)
 database/    Migraciones, seeds y scripts SQL
   migrations/            Esquema versionado 001…006, aplicado con database/scripts/migrate.ts
   seeds/                 Catálogos y perritos de prueba
-  scripts/               migrate, seed, reset-local, backup, restore
+  scripts/               migrate, seed, seed-avistamientos (100+ de prueba), reset-local, backup, restore
 docs/        Arquitectura, esquema de BD y despliegue (detalle ampliado de este README)
 openspec/    Especificaciones y cambios (spec-driven development)
 ```
@@ -651,7 +653,12 @@ El compose levanta también la base y el backend del P1:
 |---|---|---|
 | `bd` | MySQL 8.4 | Datos en el volumen `bd-datos`; no publica puerto. |
 | `backend` | Express del P1 (`backend/Dockerfile`) | Al arrancar aplica las migraciones y, **solo si la base está vacía**, carga catálogos y 15 perritos de prueba (`SEED_AL_ARRANCAR=false` lo desactiva). Fotos en el volumen `fotos` (`/datos/imagenes`). |
-| `funcional` | Servicio Elixir | Le pide los perritos a `backend:3000`. |
+| `funcional` | Servicio Elixir | Le pide los perritos a `backend:3000`. Fija `TZ=America/Monterrey`. |
+
+El arranque del backend completa además hasta **100 avistamientos de prueba**
+(`database/scripts/seed-avistamientos.ts`, determinista e idempotente: solo agrega los que
+faltan, repartidos en los últimos 30 días y en varios grupos de Saltillo). También se puede
+correr a mano con `npm run db:seed:avistamientos`.
 
 Las contraseñas y nombres tienen valores por omisión pensados solo para local; para
 cambiarlos copia `.env.example` (raíz) a `.env`. `docker compose down` conserva los datos;
@@ -741,7 +748,23 @@ del P1 (`GET /api/perritos`).
 |---|---|---|---|---|
 | GET | `/f/salud` | Estado del servicio | — | `200 { data: { estado: "ok", servicio } }` |
 | GET | `/f/zonas` | Zonas de concentración | query: `tamano` (100–5000 m, default 500) | `200 { data: { tamano, resumen, zonas } }` |
+| GET | `/f/estadisticas` | Conteos por color, raza y día, y los más comunes | query: `top` (1–20, default 5), `colores` (`principal` default, o `todos`) | `200 { data: { total, porColor, porRaza, porDia, masComunes: { colores, razas } } }` · `503` si el backend no responde |
 | POST | `/f/duplicados` | Posibles duplicados del perrito que se registra | JSON: `razaId`, `razaNombre`, `colorPrincipalId`, `coloresAdicionalesIds`, `latitud`, `longitud` | `200 { data: { umbral, duplicados: [{ id, nombre, raza, similitud, latitud, longitud }] } }` · `400` si faltan color o coordenadas · `503` si el backend no responde |
+
+**Estadísticas.** Pantalla `/estadisticas` (gráficas de registros por día, colores y razas
+más comunes). Decisiones, también documentadas en `Perritos.Estadisticas`:
+
+- *Color:* por omisión cuenta solo el **color principal** (cada perrito suma una vez y el
+  total cuadra con el número de perritos); con `colores=todos` también cuenta los
+  adicionales (un perrito suma en cada uno de sus colores).
+- *Día:* las fechas llegan en UTC y se agrupan en **hora de Saltillo (UTC−6)**. El desfase
+  es un argumento del núcleo, así que el resultado no depende de la zona horaria del
+  contenedor (aun así el compose fija `TZ=America/Monterrey`). Saltillo no usa horario de
+  verano desde octubre de 2022. Los días sin registros no aparecen.
+- *Empates* en los más comunes: primero el de mayor total y, si empatan, el de nombre menor
+  en orden alfabético (sin distinguir mayúsculas).
+- Es distinto de `GET /api/estadisticas` (Express, conteo en SQL del P1): este se calcula en
+  el núcleo de Elixir y sirve igual sobre una lista que sobre un `Stream`.
 
 **Posibles duplicados.** `similitud = 0.4 × colores + 0.2 × raza + 0.4 × cercanía`:
 

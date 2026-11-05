@@ -1,5 +1,5 @@
 // Estructura común de todas las pantallas: encabezado, contenido y navegación inferior (celular).
-import { List, Map as IconoMapa, PawPrint, Plus } from 'lucide-react'
+import { ChartNoAxesColumn, List, Map as IconoMapa, PawPrint, Plus } from 'lucide-react'
 import { useEffect } from 'react'
 import { Link, NavLink, Outlet, useLocation } from 'react-router'
 import { config } from '../config'
@@ -47,6 +47,9 @@ export function Layout() {
             <NavLink to="/perritos" className={claseEnlaceEscritorio}>
               Lista
             </NavLink>
+            <NavLink to="/estadisticas" className={claseEnlaceEscritorio}>
+              Estadísticas
+            </NavLink>
             <Link to="/registrar" className="boton boton--primario boton--chico ml-2">
               <Plus size={18} aria-hidden="true" /> Registrar perrito
             </Link>
@@ -66,12 +69,16 @@ export function Layout() {
 
       {!esFormulario && (
         <nav
-          className="alto-nav-movil fixed inset-x-0 bottom-0 z-1000 grid grid-cols-[1fr_auto_1fr] items-end border-t border-borde bg-superficie px-6 pb-(--abajo-seguro) shadow-[0_-4px_20px_rgb(42_33_27/0.06)] md:hidden"
+          className="alto-nav-movil fixed inset-x-0 bottom-0 z-1000 grid grid-cols-[1fr_1fr_auto_1fr] items-end border-t border-borde bg-superficie px-6 pb-(--abajo-seguro) shadow-[0_-4px_20px_rgb(42_33_27/0.06)] md:hidden"
           aria-label="Principal"
         >
           <NavLink to="/" end className={claseEnlaceMovil}>
             <IconoMapa size={22} aria-hidden="true" />
             <span>Mapa</span>
+          </NavLink>
+          <NavLink to="/perritos" className={claseEnlaceMovil}>
+            <List size={22} aria-hidden="true" />
+            <span>Lista</span>
           </NavLink>
           <NavLink
             to="/registrar"
@@ -85,9 +92,9 @@ export function Layout() {
             </span>
             <span>Registrar</span>
           </NavLink>
-          <NavLink to="/perritos" className={claseEnlaceMovil}>
-            <List size={22} aria-hidden="true" />
-            <span>Lista</span>
+          <NavLink to="/estadisticas" className={claseEnlaceMovil}>
+            <ChartNoAxesColumn size={22} aria-hidden="true" />
+            <span>Gráficas</span>
           </NavLink>
         </nav>
       )}

@@ -3,7 +3,8 @@
 #   1. aplica las migraciones (idempotente: omite las ya aplicadas);
 #   2. carga catálogos y perritos de prueba SÓLO si la base está vacía
 #      (el seed de perritos no se puede repetir: ruta_imagen es UNIQUE);
-#   3. abre el servidor.
+#   3. completa hasta 100 avistamientos de prueba (idempotente);
+#   4. abre el servidor.
 set -e
 cd /app
 
@@ -26,6 +27,11 @@ if [ "$TOTAL" = "0" ] && [ "${SEED_AL_ARRANCAR:-true}" = "true" ]; then
   npx --no-install tsx database/scripts/seed.ts
 else
   echo "La base ya tiene $TOTAL perritos (o SEED_AL_ARRANCAR=false): no se siembra."
+fi
+
+# Al menos 100 avistamientos de prueba (para estadísticas y zonas). Idempotente: sólo agrega los que faltan.
+if [ "${SEED_AL_ARRANCAR:-true}" = "true" ]; then
+  npx --no-install tsx database/scripts/seed-avistamientos.ts
 fi
 
 cd /app/backend

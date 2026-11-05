@@ -92,6 +92,9 @@ services:
     build: ./funcional
     environment:
       PORT: "4000"
+      # Hora de Saltillo para el contenedor (por omisión sería UTC). Las estadísticas por día
+      # no dependen de esto: el núcleo recibe el desfase UTC-6 como argumento.
+      TZ: America/Monterrey
       # El backend del P1 (servicio "backend", que agrega Aldo). Nunca localhost dentro de Docker.
       BACKEND_URL: http://backend:3000
 

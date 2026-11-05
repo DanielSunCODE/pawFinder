@@ -10,6 +10,8 @@ defmodule Perritos.Router do
   use Plug.Router
 
   plug(Plug.Logger)
+  # Antes de match: así el preflight OPTIONS se contesta sin buscar ruta.
+  plug(Perritos.Cors)
   plug(:match)
   # Necesario para leer el cuerpo JSON del POST (conn.body_params).
   plug(Plug.Parsers, parsers: [:json], pass: ["application/json"], json_decoder: Jason)

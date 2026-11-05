@@ -150,3 +150,10 @@ Raza: `1` igual, `0` distinta, `0.5` si alguna es "Sin raza definida / Criollo".
 Cercanía: `1 − haversine/500 m`. Las parejas se generan con recursión escrita a
 mano (`emparejar/2`, `parejas/1`); `ponderar/1` regresa la función de
 similitud y `buscar/3` acepta otra con `:con`.
+
+**Estadísticas** (`funcional/lib/perritos/estadisticas.ex`): `clasificador/2` regresa la
+función que dice bajo qué claves se cuenta un perrito; `contar/2` la recibe y cuenta con
+`Enum.group_by` + `Enum.reduce` (sin contadores mutables) sobre una lista o un `Stream`;
+`mas_comunes/2` toma los n primeros con recursión escrita a mano. El día se calcula en hora de
+Saltillo con un desfase fijo (UTC−6) que llega como argumento, sin leer el reloj ni la zona del
+sistema.

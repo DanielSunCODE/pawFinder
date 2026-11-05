@@ -1,18 +1,23 @@
 # PawFinder (Proyecto 2): toda la aplicación, túnel incluido, con
 #
-#   cp .env.example .env
 #   docker compose up --build
 #
-# Local: http://localhost:8080 · URL pública: docker compose logs tunel | grep trycloudflare
+# Local: http://localhost:8080
+# URL pública: docker compose logs tunel   (la línea que dice https://....trycloudflare.com)
 #
 # Contenedores:
 #   frontend   React compilado y servido con nginx            (Dockerfile: frontend/Dockerfile)
 #   proxy      nginx: única entrada; reparte /, /api/ y /f/    (proxy/nginx.conf)
 #   tunel      Cloudflare: publica el proxy en internet con https
-#   ── Pendientes (cada quien agrega el suyo aquí) ──
+#   ── Pendientes (cada quien agrega su bloque debajo de su marca, al final del archivo) ──
 #   bd         MySQL con migraciones y datos de prueba         (Aldo)
-#   backend    Express del P1                                  (Aldo)
-#   funcional  servicio Elixir del P2                          (Daniel)
+#   backend    Express del P1. Nombre "backend", puerto 3000   (Aldo)
+#   funcional  servicio Elixir del P2. Nombre "funcional",     (Daniel)
+#              puerto 4000
+#
+# El proxy ya manda /api/... a backend:3000 y /f/... a funcional:4000, así que no hay que tocar
+# proxy/nginx.conf ni el depends_on del proxy: nginx busca cada servicio en cada petición y, mientras
+# uno no exista, esa ruta responde 502 sin tumbar lo demás.
 #
 # Sólo el proxy publica un puerto; los demás se hablan por la red interna de Docker
 # usando el nombre del servicio (backend, funcional, frontend), nunca localhost.
@@ -31,7 +36,6 @@ services:
       - ./proxy/nginx.conf:/etc/nginx/conf.d/default.conf:ro
     ports:
       - "8080:80" # para probar en local: http://localhost:8080
-    # Agregar backend y funcional aquí cuando existan sus servicios.
     depends_on: [frontend]
 
   tunel:
@@ -39,3 +43,9 @@ services:
     # Quick tunnel: no necesita cuenta, pero la URL cambia cada vez que el contenedor se reinicia.
     command: tunnel --no-autoupdate --url http://proxy:80
     depends_on: [proxy]
+
+  # Cada quien escribe sólo debajo de su marca: así Git junta los dos cambios sin conflicto.
+
+  # ── Aldo: bd y backend van aquí ──
+
+  # ── Daniel: funcional va aquí ──

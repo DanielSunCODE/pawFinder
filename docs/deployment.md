@@ -54,6 +54,35 @@ código: no se sirven como carpeta estática ni se montan junto a los binarios.
 | `AWS_REGION` / `AWS_S3_BUCKET` / `AWS_ACCESS_KEY_ID` / `AWS_SECRET_ACCESS_KEY` | — | datos del bucket y credenciales IAM |
 | `PUBLIC_BASE_URL` / `OPENAPI_SERVER_URL` | `http://localhost:3000` | `https://pawfinder-hq2o.onrender.com` |
 | `VITE_API_URL` (frontend) | `/api` (proxy de Vite) | `https://pawfinder-hq2o.onrender.com` |
+| `VITE_FUNCIONAL_URL` (frontend) | `/f` (proxy de Vite o nginx) | URL pública del servicio Elixir **con** `/f`, p. ej. `https://<servicio-elixir>.onrender.com/f` |
+
+### Servicio Elixir (Proyecto 2) en producción
+
+En Vercel no hay proxy que reparta `/f/...` (nginx solo existe en Docker), así que sin
+configuración esas peticiones devuelven **404**. Hay que desplegar el servicio y decirle
+al frontend dónde está:
+
+1. **Render → New → Web Service** desde este repositorio, *Runtime: Docker*,
+   *Root Directory:* `funcional` (usa `funcional/Dockerfile`).
+2. Variables del servicio Elixir:
+
+   | Variable | Valor |
+   |---|---|
+   | `BACKEND_URL` | `https://pawfinder-hq2o.onrender.com` (el backend del P1) |
+   | `CORS_ORIGIN` | `https://paw-finder-frontend.vercel.app` (varios, separados por comas) |
+   | `PORT` | lo asigna Render; el servicio lo lee solo |
+
+3. En **Vercel → Settings → Environment Variables** del frontend:
+   `VITE_FUNCIONAL_URL=https://<servicio-elixir>.onrender.com/f` y **volver a desplegar**
+   (las variables `VITE_` se fijan al compilar, no al arrancar).
+4. Comprobar: `https://<servicio-elixir>.onrender.com/f/salud` debe responder
+   `{"data":{"estado":"ok",...}}`.
+
+El navegador llama al servicio Elixir directamente (otro origen), por eso existe `CORS_ORIGIN`
+(`funcional/lib/perritos/cors.ex`): solo se permiten los orígenes de la lista y los `OPTIONS`
+(preflight del POST de duplicados) se contestan con `204`. En el plan gratuito de Render el
+servicio se duerme; la primera petición tras un rato puede tardar casi un minuto y el aviso de
+duplicados o las gráficas aparecerán con retraso.
 
 ### Dónde se guardan las contraseñas
 

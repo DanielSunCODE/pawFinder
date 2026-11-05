@@ -290,7 +290,7 @@ npm run db:seed
 ```
 
 Resultado esperado: una línea `+ 00X_archivo.sql aplicada` por cada migración, y
-al sembrar el aviso de los catálogos y los 16 perritos de prueba cargados.
+al sembrar el aviso de los catálogos y los 117 perritos de prueba cargados.
 
 ### Paso 6 — Levantar el proyecto
 
@@ -497,7 +497,7 @@ npm run db:seed
 ```
 
 Carga **26 razas** (incluye "Sin raza definida / Criollo"), **12 colores**, 6
-colores de ojos, 18 patrones de pelaje, y **16 perritos de prueba**. Si
+colores de ojos, 18 patrones de pelaje, y **117 perritos de prueba** (16 básicos y 101 avistamientos alrededor de Saltillo, con zonas de distinta densidad y algunas parejas casi iguales, para que Zonas y Duplicados tengan datos). Si
 `STORAGE_DRIVER=local`, además genera una foto PNG válida por cada perrito
 dentro de `RUTA_IMAGENES` (para que la app se vea completa sin tener que
 versionar imágenes pesadas en el repo).
@@ -650,7 +650,7 @@ El compose levanta también la base y el backend del P1:
 | Servicio | Qué es | Notas |
 |---|---|---|
 | `bd` | MySQL 8.4 | Datos en el volumen `bd-datos`; no publica puerto. |
-| `backend` | Express del P1 (`backend/Dockerfile`) | Al arrancar aplica las migraciones y, **solo si la base está vacía**, carga catálogos y 15 perritos de prueba (`SEED_AL_ARRANCAR=false` lo desactiva). Fotos en el volumen `fotos` (`/datos/imagenes`). |
+| `backend` | Express del P1 (`backend/Dockerfile`) | Al arrancar aplica las migraciones y, **solo si la base está vacía**, carga catálogos y 117 perritos de prueba (`SEED_AL_ARRANCAR=false` lo desactiva). Fotos en el volumen `fotos` (`/datos/imagenes`). |
 | `funcional` | Servicio Elixir | Le pide los perritos a `backend:3000`. |
 
 Las contraseñas y nombres tienen valores por omisión pensados solo para local; para

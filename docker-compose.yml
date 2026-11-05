@@ -48,6 +48,44 @@ services:
 
   # ── Aldo: bd y backend van aquí ──
 
+  bd:
+    image: mysql:8.4
+    environment:
+      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD:-pawfinder-root}
+      MYSQL_DATABASE: ${DB_NAME:-pawfinder}
+      MYSQL_USER: ${DB_USER:-pawfinder}
+      MYSQL_PASSWORD: ${DB_PASSWORD:-pawfinder}
+    volumes:
+      - bd-datos:/var/lib/mysql
+    healthcheck:
+      # Por TCP (127.0.0.1): durante la inicialización MySQL sólo escucha en el socket.
+      test: ["CMD-SHELL", "mysqladmin ping -h 127.0.0.1 -u root -p$$MYSQL_ROOT_PASSWORD --silent"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+      start_period: 20s
+
+  backend:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    environment:
+      PORT: "3000"
+      DB_HOST: bd # nombre del servicio, nunca localhost dentro de Docker
+      DB_PORT: "3306"
+      DB_USER: ${DB_USER:-pawfinder}
+      DB_PASSWORD: ${DB_PASSWORD:-pawfinder}
+      DB_NAME: ${DB_NAME:-pawfinder}
+      CORS_ORIGIN: ${CORS_ORIGIN:-http://localhost:8080}
+      STORAGE_DRIVER: local
+      RUTA_IMAGENES: /datos/imagenes
+      SEED_AL_ARRANCAR: ${SEED_AL_ARRANCAR:-true}
+    volumes:
+      - fotos:/datos/imagenes # las fotos viven fuera del código
+    depends_on:
+      bd:
+        condition: service_healthy
+
   # ── Daniel: funcional va aquí ──
 
   funcional:
@@ -56,3 +94,7 @@ services:
       PORT: "4000"
       # El backend del P1 (servicio "backend", que agrega Aldo). Nunca localhost dentro de Docker.
       BACKEND_URL: http://backend:3000
+
+volumes:
+  bd-datos:
+  fotos:

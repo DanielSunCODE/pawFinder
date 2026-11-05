@@ -640,9 +640,22 @@ en `funcional/`. El P1 (React, Express, MySQL) sigue instalándose y corriendo
 
 ```bash
 docker compose up --build            # app completa en http://localhost:8080
+docker compose up -d --build bd backend funcional proxy   # igual, pero SIN el túnel público
 docker compose build funcional       # solo la imagen del servicio Elixir
 docker compose run --rm --entrypoint "" funcional bin/perritos eval 'IO.puts(:ok)'   # comprobar que arranca
 ```
+
+El compose levanta también la base y el backend del P1:
+
+| Servicio | Qué es | Notas |
+|---|---|---|
+| `bd` | MySQL 8.4 | Datos en el volumen `bd-datos`; no publica puerto. |
+| `backend` | Express del P1 (`backend/Dockerfile`) | Al arrancar aplica las migraciones y, **solo si la base está vacía**, carga catálogos y 15 perritos de prueba (`SEED_AL_ARRANCAR=false` lo desactiva). Fotos en el volumen `fotos` (`/datos/imagenes`). |
+| `funcional` | Servicio Elixir | Le pide los perritos a `backend:3000`. |
+
+Las contraseñas y nombres tienen valores por omisión pensados solo para local; para
+cambiarlos copia `.env.example` (raíz) a `.env`. `docker compose down` conserva los datos;
+`docker compose down -v` borra la base y las fotos.
 
 **Sin Docker** (requiere Elixir 1.17+ y Erlang/OTP 26+; el backend debe estar corriendo):
 

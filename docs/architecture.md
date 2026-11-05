@@ -60,6 +60,9 @@ backend/
     routes/                    health, perritos
     middleware/                Errores uniformes y validación
     docs/                      Esquemas y documento OpenAPI generados
+funcional/                     Servicio Elixir del P2 (Plug + Bandit)
+  lib/perritos/                Núcleos puros (duplicados, zonas) y cáscaras /f/...
+  test/                        ExUnit + doctests
 database/
   migrations/                  Esquema versionado (001..006)
   seeds/                       Catálogos y perritos de prueba
@@ -118,3 +121,32 @@ openspec/                      Specs y cambios
   mayor `IMAGE_MAX_DIMENSION`) y se reencodea con `sharp` (`IMAGE_OUTPUT_FORMAT`,
   `IMAGE_QUALITY`) antes de guardarse; se descartan los metadatos EXIF, incluido
   el GPS. Si una imagen no se puede procesar, se guarda la original ya validada.
+
+## Servicio funcional (Proyecto 2)
+
+Servicio Elixir independiente (`funcional/`), consumido por el mismo frontend
+con rutas relativas `/f/...`. No toca la base de datos: le pide los perritos al
+backend del P1 (`GET /api/perritos`, con Req) y calcula.
+
+Cada funcionalidad se divide en dos:
+
+- **Núcleo** (`Perritos.Duplicados`, `Perritos.Zonas`): solo funciones puras.
+  Sin base de datos, sin peticiones, sin reloj, sin estado mutable.
+- **Cáscara** (`*_web.ex`): lee la petición, trae los datos (`Perritos.Datos`),
+  llama al núcleo y responde JSON. Convierte tuplas a mapas porque JSON no las
+  soporta; no calcula nada.
+
+```mermaid
+flowchart LR
+  F["Frontend"] -->|"POST /f/duplicados"| N["Proxy nginx / Vite"]
+  N --> W["Cáscara DuplicadosWeb"]
+  W -->|"GET /api/perritos (Req)"| B["Backend P1"]
+  W -->|"buscar/3"| C["Núcleo Duplicados (puro)"]
+```
+
+**Posibles duplicados** (`funcional/lib/perritos/duplicados.ex`):
+`similitud = 0.4·Jaccard(colores) + 0.2·raza + 0.4·cercanía`, umbral `0.8`.
+Raza: `1` igual, `0` distinta, `0.5` si alguna es "Sin raza definida / Criollo".
+Cercanía: `1 − haversine/500 m`. Las parejas se generan con recursión escrita a
+mano (`emparejar/2`, `parejas/1`); `ponderar/1` regresa la función de
+similitud y `buscar/3` acepta otra con `:con`.

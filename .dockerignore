@@ -1,0 +1,15 @@
+# Lo que NO se manda a Docker al construir desde la raíz del repositorio.
+.git
+**/node_modules
+**/dist
+**/coverage
+
+# Compilados del servicio Elixir (se compilan dentro del contenedor)
+funcional/_build
+funcional/deps
+funcional/doc
+
+# Secretos y configuración local: llegan por variables de entorno del compose, no por archivos
+**/.env
+**/.env.local
+**/.env.*.local

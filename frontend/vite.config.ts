@@ -8,11 +8,14 @@ export default defineConfig(({ mode }) => {
   // Lee .env, .env.local, etc. (incluye variables sin el prefijo VITE_, sólo aquí en Node).
   const env = loadEnv(mode, process.cwd(), '')
   const urlBackend = env.BACKEND_URL || 'http://localhost:3000'
+  const urlFuncional = env.FUNCIONAL_URL || 'http://localhost:4000'
 
-  // Todo lo que empiece con /api se reenvía al backend. Así el navegador sólo habla con
-  // un origen (el de Vite): no hay problemas de CORS ni de mezclar http con https.
+  // Todo lo que empiece con /api se reenvía al backend y lo que empiece con /f al servicio Elixir
+  // (Proyecto 2). Así el navegador sólo habla con un origen (el de Vite): no hay problemas de CORS
+  // ni de mezclar http con https. En Docker, el mismo reparto lo hace nginx (proxy/nginx.conf).
   const proxy = {
     '/api': { target: urlBackend, changeOrigin: true },
+    '/f': { target: urlFuncional, changeOrigin: true },
   }
 
   return {

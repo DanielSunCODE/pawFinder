@@ -10,8 +10,10 @@
 import { CircleAlert, LoaderCircle, Send, X } from 'lucide-react'
 import { useState, type FormEvent } from 'react'
 import { useNavigate } from 'react-router'
+import type { ConsultaDuplicados } from '../api/duplicados'
 import { api, ErrorApi, mensajeDeError, type Id, type NuevoPerrito } from '../api'
 import { Cargando, MensajeError } from '../components/Estado'
+import { AvisoDuplicados } from '../components/formulario/AvisoDuplicados'
 import { SelectorColores } from '../components/formulario/SelectorColores'
 import { SelectorFoto } from '../components/formulario/SelectorFoto'
 import { SelectorOpciones } from '../components/formulario/SelectorOpciones'
@@ -115,6 +117,18 @@ export function RegistrarPage() {
 
   // Si la persona no ha elegido raza, se usa "Sin raza definida / Criollo".
   const datos: DatosFormulario = { ...datosEditados, razaId: datosEditados.razaId ?? idSinRaza }
+  // Datos para el aviso de posibles duplicados; hasta que haya color principal y ubicación no se consulta.
+  const consultaDuplicados: ConsultaDuplicados | null =
+    datos.colorPrincipalId !== null && datos.ubicacion
+      ? {
+          razaId: datos.razaId,
+          razaNombre: razas.find((raza) => raza.id === datos.razaId)?.nombre ?? null,
+          colorPrincipalId: datos.colorPrincipalId,
+          coloresAdicionalesIds: datos.coloresAdicionalesIds,
+          latitud: datos.ubicacion.latitud,
+          longitud: datos.ubicacion.longitud,
+        }
+      : null
   const esPatronSolido = idPatronSolido !== null && datos.patronPelajeId === idPatronSolido
 
   // Los errores locales se muestran después del primer intento de envío y se recalculan en vivo.
@@ -390,6 +404,8 @@ export function RegistrarPage() {
           error={errores.ubicacion}
         />
       </section>
+
+      <AvisoDuplicados consulta={consultaDuplicados} />
 
       {listaErrores.length > 0 && (
         <div className={estilos.resumenErrores} role="alert">

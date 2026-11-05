@@ -133,3 +133,20 @@
 .popup-perrito .boton {
   color: #fff;
 }
+
+/* ── Zonas de concentración: número al centro de cada cuadro ───────────── */
+.leaflet-tooltip.etiqueta-zona {
+  padding: 0;
+  background: none;
+  border: none;
+  box-shadow: none;
+  color: #fff;
+  font: 800 13px/1 var(--font-sans);
+  text-shadow:
+    0 0 3px rgb(0 0 0 / 0.6),
+    0 1px 2px rgb(0 0 0 / 0.5);
+}
+
+.leaflet-tooltip.etiqueta-zona::before {
+  display: none;
+}

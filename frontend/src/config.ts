@@ -22,6 +22,9 @@ export const config = {
   /** URL base de la API. En desarrollo se deja en /api y el proxy de Vite la reenvía al backend. */
   apiUrl: import.meta.env.VITE_API_URL || '/api',
 
+  /** URL base del servicio Elixir del Proyecto 2. En desarrollo el proxy de Vite la reenvía; en Docker, nginx. */
+  funcionalUrl: import.meta.env.VITE_FUNCIONAL_URL || '/f',
+
   mapa: {
     centro: leerCentro(import.meta.env.VITE_MAPA_CENTRO),
     zoom: Number(import.meta.env.VITE_MAPA_ZOOM) || 13,

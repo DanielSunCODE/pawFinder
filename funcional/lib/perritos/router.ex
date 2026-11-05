@@ -5,6 +5,7 @@ defmodule Perritos.Router do
     * `GET  /f/salud`      → comprueba que el servicio vive.
     * `GET  /f/zonas`      → zonas de concentración (`Perritos.ZonasWeb`).
     * `POST /f/duplicados` → posibles duplicados (`Perritos.DuplicadosWeb`).
+    * `GET  /f/estadisticas` → conteos por color, raza y día (`Perritos.EstadisticasWeb`).
   """
   use Plug.Router
 
@@ -20,6 +21,7 @@ defmodule Perritos.Router do
 
   forward("/f/zonas", to: Perritos.ZonasWeb)
   forward("/f/duplicados", to: Perritos.DuplicadosWeb)
+  forward("/f/estadisticas", to: Perritos.EstadisticasWeb)
 
   match _ do
     responder(conn, 404, %{error: %{message: "No encontramos esa ruta."}})

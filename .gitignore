@@ -32,3 +32,6 @@ database/seeds/assets/*
 
 # Respaldos de base de datos generados localmente
 database/backups/
+
+# Guía personal de exposición (no se versiona)
+docs/guia-demo.md
